@@ -27,7 +27,7 @@ for t in sorted(T, key=lambda x: x["organisation"].lower()):
 open("data.js", "w").write("window.DATA=" + json.dumps(rows, ensure_ascii=False) + ";window.ASOF='10 October 2026';")
 with open("us_ai_evaluators.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    w.writerow(["Organisation", "Website", "Institutional form", "Activity assessed", "Evaluation evidence", "Evidence link", "Funding and relationships",
+    w.writerow(["Organisation", "Website", "Institutional form", "Activity assessed", "Recent evaluation publication", "Publication link", "Funding and relationships",
                 "Properties", "Methods", "Domains", "Relationship types", "Developer relationship", "Developers named", "Contact"])
     for r in rows:
         w.writerow([r["organisation"], r["website"], r["institutional_form"], r["activity_assessed"], r["evaluation_evidence"], r["evidence_url"], r["relationships"],
