@@ -46,7 +46,7 @@
   td { padding:14px; vertical-align:top; border-bottom:1px solid var(--rule); }
   tbody tr:hover td { background:#fbfaf7; }
   td.org { width:14%; font:600 14.5px/1.35 var(--serif); color:var(--ink); }
-  td.form { width:9%; white-space:nowrap; }
+  td.form { width:11%; }
   td.act { width:20%; }
   td.ev { width:18%; }
   td.rel { width:30%; }
@@ -81,6 +81,21 @@
   tr.open .tgb { transform:rotate(180deg); border-color:var(--navy); color:var(--navy); }
   tr.over { cursor:pointer; }
   #expand { font:inherit; font-size:12px; background:none; border:none; color:var(--link); cursor:pointer; padding:0; }
+  .aka { display:block; font:400 12px/1.4 var(--sans); color:var(--ink2); margin-top:4px; }
+  .ctl { display:block; font:400 11.5px/1.4 var(--sans); color:var(--muted); margin-top:3px; }
+  .src { font:500 10px/1 var(--sans); margin-left:3px; white-space:nowrap; }
+  .src a { color:var(--link); text-decoration:none; border:1px solid var(--rule2); border-radius:2px; padding:0 3px; margin-left:2px; vertical-align:1px; }
+  .src a:hover { border-color:var(--link); }
+  .scope { display:block; color:var(--muted); font-size:11.5px; margin-top:2px; }
+  .roles { margin:8px 0 0; display:grid; grid-template-columns:auto 1fr; gap:2px 8px; font-size:11.5px; }
+  .roles dt { color:var(--muted); white-space:nowrap; }
+  .roles dd { margin:0; color:var(--ink2); }
+  .oth { margin-top:8px; font-size:11.5px; color:var(--muted); }
+  .oth ul { margin:3px 0 0; padding-left:14px; }
+  .oth a { color:var(--link); text-decoration:none; }
+  .note-l { color:var(--muted); font-size:12px; margin-top:4px; max-width:900px; }
+  .dls { margin-left:auto; display:flex; flex-wrap:wrap; gap:8px; }
+  .dls .dl { margin-left:0; }
   .empty { padding:40px; text-align:center; color:var(--muted); }
   @media (max-width:640px) { .top-in, main { padding-left:16px; padding-right:16px; } h1 { font-size:22px; } .grid { grid-template-columns:1fr 1fr; } .fld.wide { grid-column:1 / -1; } .dl { margin-left:0; } .count { margin-left:0; } }
 </style>
@@ -89,21 +104,23 @@
 <div class="top"><div class="top-in">
   <div>
     <h1>US Organisations Evaluating Frontier AI Systems</h1>
-    <div class="meta">Dataset as of <b id="asof"></b> · <b id="total"></b> organisations</div>
+    <div class="meta">Dataset as of <b id="asof"></b> · <b id="total"></b> evaluators (rows), <b id="indep"></b> independently controlled organisations</div>
+    <div class="note-l">Each row shows one selected evaluation publication as an example, not the organisation's full body of work. Relationships are those found in the sources checked; an absence is not proof that none exists.</div>
   </div>
-  <a class="dl" href="us_ai_evaluators.csv" download>Download CSV</a>
+  <div class="dls"><a class="dl" href="us_ai_evaluators.csv" download>Table (CSV)</a><a class="dl" href="us_ai_evaluators_relationships.csv" download>Relationship sources (CSV)</a><a class="dl" href="us_ai_evaluators_funders.csv" download>Funder lists (CSV)</a></div>
 </div></div>
 <main>
   <section class="panel">
     <div class="grid">
-      <div class="fld wide"><label for="q">Search</label><input id="q" type="search" placeholder="Organisation, publication or relationship"></div>
-      <div class="fld"><label for="f-form">Institutional form</label><select id="f-form"><option value="">All</option></select></div>
+      <div class="fld wide"><label for="q">Search</label><input id="q" type="search" placeholder="Name (incl. brand or former name), publication or relationship"></div>
+      <div class="fld"><label for="f-form">Sector</label><select id="f-form"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-desig">Federal designation</label><select id="f-desig"><option value="">All</option></select></div>
       <div class="fld"><label for="f-prop">Property</label><select id="f-prop"><option value="">All</option></select></div>
       <div class="fld"><label for="f-method">Method</label><select id="f-method"><option value="">All</option></select></div>
       <div class="fld"><label for="f-domain">Domain</label><select id="f-domain"><option value="">All</option></select></div>
-      <div class="fld"><label for="f-author">Publication by</label><select id="f-author"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-author">Selected publication issued by</label><select id="f-author"><option value="">All</option></select></div>
       <div class="fld"><label for="f-rel">Relationship type</label><select id="f-rel"><option value="">All</option></select></div>
-      <div class="fld"><label for="f-dev">Developer relationship</label><select id="f-dev"><option value="">All</option><option>Yes</option><option>No</option></select></div>
+      <div class="fld"><label for="f-dev">Developer relationship</label><select id="f-dev"><option value="">All</option><option>Yes</option><option>None found in sources checked</option></select></div>
       <div class="fld"><label for="f-devname">Developer</label><select id="f-devname"><option value="">All</option></select></div>
     </div>
     <div class="bar">
@@ -112,7 +129,7 @@
         <span><i class="dot" style="background:var(--c-gov)"></i>Government</span>
         <span><i class="dot" style="background:var(--c-phil)"></i>Philanthropic</span>
         <span><i class="dot" style="background:var(--c-corp)"></i>Corporate and ownership</span>
-        <span><i class="dot" style="background:var(--c-none)"></i>None identified</span>
+        <span><i class="dot" style="background:var(--c-none)"></i>None found in sources checked</span>
       </div>
       <span class="count" id="count"></span>
       <button id="expand" type="button">Expand all rows</button>
@@ -124,9 +141,9 @@
       <thead><tr>
         <th aria-label="Expand"></th>
         <th data-k="organisation">Organisation</th>
-        <th data-k="form">Form</th>
-        <th data-k="activity_assessed">Activity assessed</th>
-        <th data-k="evaluation_evidence">Recent evaluation publication</th>
+        <th data-k="sector">Form</th>
+        <th data-k="activity_assessed" title="As shown in the selected publication">Activity assessed</th>
+        <th data-k="evaluation_evidence" title="One qualifying example chosen by the project's selection rule, not the full portfolio">Selected evaluation publication</th>
         <th data-k="relationships">Funding and relationships</th>
         <th data-k="contact">Contact</th>
       </tr></thead>
@@ -138,15 +155,16 @@
 <script>
 (function () {
   const D = window.DATA, $ = (id) => document.getElementById(id);
-  $("asof").textContent = window.ASOF; $("total").textContent = D.length;
-  const FORMC = { "For-profit": "var(--f-fp)", "Non-profit": "var(--f-np)", "FFRDC": "var(--f-ff)", "UARC": "var(--f-ua)" };
+  $("asof").textContent = window.ASOF; $("total").textContent = D.length; $("indep").textContent = window.INDEP;
+  const FORMC = { "For-profit": "var(--f-fp)", "Non-profit": "var(--f-np)", "Operated by contractor (see operator)": "var(--muted)", "FFRDC": "var(--f-ff)", "UARC": "var(--f-ua)" };
   const uniq = (f) => [...new Set(D.flatMap(f))].filter(Boolean).sort((a, b) => a.localeCompare(b));
   const fill = (id, vals) => vals.forEach((v) => { const o = document.createElement("option"); o.value = o.textContent = v; $(id).appendChild(o); });
-  fill("f-form", uniq((r) => [r.form]));
+  fill("f-form", uniq((r) => [r.sector]));
+  fill("f-desig", uniq((r) => [r.designation]));
   fill("f-prop", uniq((r) => r.properties));
   fill("f-method", uniq((r) => r.methods));
   fill("f-domain", uniq((r) => r.domains));
-  fill("f-author", uniq((r) => [r.evidence_author]));
+  fill("f-author", uniq((r) => [r.publisher_type]));
   fill("f-rel", uniq((r) => r.relationship_types));
   const devCount = {}; D.forEach((r) => r.developers.forEach((d) => (devCount[d] = (devCount[d] || 0) + 1)));
   fill("f-devname", Object.keys(devCount).sort((a, b) => devCount[b] - devCount[a] || a.localeCompare(b)));
@@ -159,10 +177,14 @@
     if (/^(\d[\d,]* funders|Philanthropic|Fiscal sponsor)/.test(it)) return "var(--c-phil)";
     return "var(--c-corp)";
   };
-  const relItem = (it) => {
-    const m = it.match(/^([A-Z][A-Za-z\- ]+):\s*([\s\S]*)$/);
+  const relItem = (x) => {
+    const it = x.text, m = x.type === "None found" ? null : it.match(/^([A-Z][A-Za-z\- ]+):\s*([\s\S]*)$/);
     const body = m ? `<b>${esc(m[1])}.</b> ${esc(m[2])}` : esc(it);
-    return `<li><i class="dot" style="background:${relC(it)}"></i><span>${body}</span></li>`;
+    const srcs = x.sources.map((s, i) => `<a href="${esc(s.url)}" target="_blank" rel="noopener" title="${esc((s.title || s.url) + (s.date ? " (" + s.date + ")" : "") + " · " + s.status)}">${x.sources.length > 1 ? i + 1 : "source"}</a>`).join("");
+    const extra = x.data_file ? `<span class="src"><a href="us_ai_evaluators_funders.csv" download>funder list</a></span>`
+      : x.scope ? `<span class="scope">Sources checked: ${esc(x.scope)}</span>` : (srcs ? `<span class="src">${srcs}</span>` : "");
+    const dot = x.type === "None found" ? "var(--c-none)" : relC(it);
+    return `<li><i class="dot" style="background:${dot}"></i><span>${body}${extra}</span></li>`;
   };
   const activity = (t) => {
     const parts = String(t || "").split(/(Property|Method|Domain):\s*/); let html = "";
@@ -175,16 +197,29 @@
   const evidence = (r) => {
     const [title, ...rest] = String(r.evaluation_evidence || "").split(" — ");
     const t = r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title);
-    return t + (rest.length ? `<span class="note">${esc(rest.join(" — "))}</span>` : "");
+    const ro = r.roles, show = (v) => v && v !== "Not yet checked";
+    const roles = show(ro.conducted_by) ? `<dl class="roles"><dt>Conducted by</dt><dd>${esc(ro.conducted_by)}</dd><dt>Issued by</dt><dd>${esc(ro.published_by)}</dd><dt>Paid for by</dt><dd>${esc(ro.commissioned_by)}</dd><dt>Publication control</dt><dd>${esc(ro.publication_control)}</dd></dl>` : "";
+    const oth = r.other_evaluations.length ? `<div class="oth">Other evaluation publications (${r.other_evaluations.length})<ul>${r.other_evaluations.map((o) => `<li><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.title)}</a></li>`).join("")}</ul></div>` : "";
+    return t + (rest.length ? `<span class="note">${esc(rest.join(" — "))}</span>` : "") + roles + oth;
   };
   const contactCell = (r) => {
     if (r.contact_emails.length) return r.contact_emails.map((e) => `<a href="mailto:${esc(e)}">${esc(e).replace("@", "@<wbr>")}</a>`).join("");
     return r.contact_form ? `<a href="${esc(r.contact_form)}" target="_blank" rel="noopener">Contact form</a>` : "";
   };
   const formCell = (r) => {
-    const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
-    return `<span class="form-l"><i style="background:${FORMC[r.form] || "var(--muted)"}"></i>${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
+    const head = r.designation !== "None" ? r.designation : r.sector;
+    const subs = [r.designation !== "None" ? "" : r.legal_form, r.designation !== "None" || r.sector === "For-profit" ? "" : r.tax_status, r.operator ? "Operator: " + r.operator : ""].filter(Boolean)
+      .filter((x) => x !== "Not shown in the registered name");
+    return `<span class="form-l"><i style="background:${FORMC[head] || "var(--muted)"}"></i>${esc(head)}</span>${subs.map((x) => `<span class="sub">${esc(x)}</span>`).join("")}`;
   };
+  const orgCell = (r) => (r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation)) +
+    (r.known_as ? `<span class="aka">Also known as ${esc(r.known_as)}</span>` : "") +
+    (r.controlled_by && !r.operator ? `<span class="ctl">Controlled by ${esc(r.controlled_by)}</span>` : "");
+  const norm = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+  const hay = (r) => " " + norm([r.organisation, r.known_as, r.aliases, r.controlled_by, r.sector, r.legal_form, r.tax_status, r.designation, r.operator, r.activity_assessed,
+    r.evaluation_evidence, r.relationships, r.other_evaluations.map((o) => o.title).join(" "), r.contact].join(" ")).replace(/[^a-z0-9@.]+/g, " ") + " ";
+  D.forEach((r) => (r._h = hay(r)));
+  const matchQ = (r, q) => norm(q).split(/[^a-z0-9@.]+/).filter(Boolean).every((w) => r._h.includes(" " + w));
   const openSet = new Set(); let allOpen = false;
   function markOverflow() {
     document.querySelectorAll("#rows tr[data-o]").forEach((tr) => {
@@ -200,25 +235,25 @@
     const o = tr.dataset.o; tr.classList.toggle("open");
     tr.classList.contains("open") ? openSet.add(o) : openSet.delete(o);
   });
-  const IDS = ["q", "f-form", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
+  const IDS = ["q", "f-form", "f-desig", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
   let sortK = "organisation", sortDir = 1;
   function render() {
     const v = (id) => $(id).value, q = v("q").trim().toLowerCase();
     const rows = D.filter((r) =>
-      (!v("f-form") || r.form === v("f-form")) && (!v("f-prop") || r.properties.includes(v("f-prop"))) &&
+      (!v("f-form") || r.sector === v("f-form")) && (!v("f-desig") || r.designation === v("f-desig")) && (!v("f-prop") || r.properties.includes(v("f-prop"))) &&
       (!v("f-method") || r.methods.includes(v("f-method"))) && (!v("f-domain") || r.domains.includes(v("f-domain"))) &&
-      (!v("f-author") || r.evidence_author === v("f-author")) && (!v("f-rel") || r.relationship_types.includes(v("f-rel"))) &&
+      (!v("f-author") || r.publisher_type === v("f-author")) && (!v("f-rel") || r.relationship_types.includes(v("f-rel"))) &&
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
-      (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships, r.contact].join(" ").toLowerCase().includes(q))
+      (!q || matchQ(r, q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
     const C = (cls, html) => `<td class="${cls}"><div class="clip">${html}</div></td>`;
     $("rows").innerHTML = rows.length ? rows.map((r) => `<tr data-o="${esc(r.organisation)}" class="${openSet.has(r.organisation) || allOpen ? "open" : ""}">
       <td class="tg"><button class="tgb" type="button" aria-label="Expand row"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button></td>
-      ${C("org", r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation))}
+      ${C("org", orgCell(r))}
       ${C("form", formCell(r))}
       ${C("act", activity(r.activity_assessed))}
       ${C("ev", evidence(r))}
-      ${C("rel", `<ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul>`)}
+      ${C("rel", `<ul class="rl">${r.relationship_items.map(relItem).join("")}</ul>`)}
       ${C("ct", contactCell(r))}</tr>`).join("")
       : `<tr><td colspan="7" class="empty">No organisations match these filters.</td></tr>`;
     markOverflow();
