@@ -31,12 +31,10 @@ for t in sorted(T, key=lambda x: x["organisation"].lower()):
 INDEP = len(rows) - sum(1 for r in rows if r["controller_row"])
 open("data.js", "w").write("window.DATA=" + json.dumps(rows, ensure_ascii=False) + f";window.ASOF='10 October 2026';window.INDEP={INDEP};")
 import shutil, os
-for src, dst in [("us_ai_evaluators_relationships_2026-10-10.csv", "us_ai_evaluators_relationships.csv")]:
-    if os.path.exists(f"{P}/deliverables/{src}"): shutil.copy(f"{P}/deliverables/{src}", dst)
 with open("us_ai_evaluators.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
     w.writerow(["Organisation", "Also known as", "Website", "Controlled by", "Sector", "Legal form", "Tax status", "Federal designation", "Operator or fiscal sponsor",
-                "Activity assessed (in the selected publication)", "Recent evaluation publication", "Publication link", "Conducted by", "Published by", "Publisher type",
+                "Activity assessed (in the selected publication)", "Recent evaluation", "Publication link", "Conducted by", "Published by", "Publisher type",
                 "Commissioned or paid by", "Publication control", "Other evaluation publications", "Funding and relationships", "Relationship sources",
                 "Properties", "Methods", "Domains", "Relationship types", "Developer relationship", "Developers named", "Contact"])
     for r in rows:
