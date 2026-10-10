@@ -23,7 +23,7 @@ for t in sorted(T, key=lambda x: x["organisation"].lower()):
                                   "relationships": t["relationships"], "properties": t["properties"], "methods": t["methods"], "domains": t["domains"],
                  "relationship_types": t["relationship_types"], "developer_relationship": t["developer_relationship"],
                  "developers": developers(t["relationships"]), "contact": t["contact"], "contact_emails": t["contact_emails"], "contact_form": t["contact_form"],
-                 "known_as": t["known_as"], "aliases": t["aliases"], "controlled_by": t["controlled_by"], "controller_row": t["controller_row"],
+                 "known_as": t["known_as"], "description": t["description"], "description_url": t["description_url"], "aliases": t["aliases"], "controlled_by": t["controlled_by"], "controller_row": t["controller_row"],
                  "sector": t["sector"], "legal_form": t["legal_form"], "tax_status": t["tax_status"], "designation": t["designation"], "operator": t["operator"],
                  "relationship_items": t["relationship_items"], "other_evaluations": t["other_evaluations"], "roles": t["roles"],
                  "publisher_type": t["roles"]["published_by_type"] if t["roles"]["published_by_type"] != "Not yet checked"
@@ -33,13 +33,13 @@ open("data.js", "w").write("window.DATA=" + json.dumps(rows, ensure_ascii=False)
 import shutil, os
 with open("us_ai_evaluators.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    w.writerow(["Organisation", "Also known as", "Website", "Controlled by", "Sector", "Legal form", "Tax status", "Federal designation", "Operator or fiscal sponsor",
+    w.writerow(["Organisation", "Also known as", "Description (organisation's own words)", "Description source", "Website", "Controlled by", "Sector", "Legal form", "Tax status", "Federal designation", "Operator or fiscal sponsor",
                 "Activity assessed (in the selected publication)", "Recent evaluation", "Publication link", "Conducted by", "Published by", "Publisher type",
                 "Commissioned or paid by", "Publication control", "Other evaluation publications", "Funding and relationships", "Relationship sources",
                 "Properties", "Methods", "Domains", "Relationship types", "Developer relationship", "Developers named", "Contact"])
     for r in rows:
         ro = r["roles"]
-        w.writerow([r["organisation"], r["known_as"], r["website"], r["controlled_by"], r["sector"], r["legal_form"], r["tax_status"], r["designation"], r["operator"],
+        w.writerow([r["organisation"], r["known_as"], r["description"], r["description_url"], r["website"], r["controlled_by"], r["sector"], r["legal_form"], r["tax_status"], r["designation"], r["operator"],
                     r["activity_assessed"], r["evaluation_evidence"], r["evidence_url"], ro["conducted_by"], ro["published_by"], ro["published_by_type"],
                     ro["commissioned_by"], ro["publication_control"], "; ".join(f"{o['title']} <{o['url']}>" for o in r["other_evaluations"]), r["relationships"],
                     " | ".join(f"{i['text']} <{' '.join(s['url'] for s in i['sources']) or i.get('data_file') or 'sources checked: ' + i.get('scope', '')}>" for i in r["relationship_items"]),

@@ -82,6 +82,9 @@
   tr.over { cursor:pointer; }
   #expand { font:inherit; font-size:11px; background:none; border:none; color:var(--link); cursor:pointer; padding:0; }
   .aka { display:block; font:400 11px/1.4 var(--sans); color:var(--ink2); margin-top:4px; }
+  .desc { display:block; font:italic 400 11.5px/1.45 var(--sans); color:var(--ink2); margin-top:5px; }
+  .desc a { color:var(--muted); text-decoration:none; border:none; font-style:normal; margin-left:3px; }
+  .desc a:hover { color:var(--link); }
   .ctl { display:block; font:400 10.5px/1.4 var(--sans); color:var(--muted); margin-top:3px; }
   .src { font:500 9px/1 var(--sans); margin-left:3px; white-space:nowrap; }
   .src a { color:var(--link); text-decoration:none; border:1px solid var(--rule2); border-radius:2px; padding:0 3px; margin-left:2px; vertical-align:1px; }
@@ -214,9 +217,10 @@
   };
   const orgCell = (r) => (r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation)) +
     (r.known_as ? `<span class="aka">Also known as ${esc(r.known_as)}</span>` : "") +
+    (r.description ? `<span class="desc">“${esc(r.description)}”<a href="${esc(r.description_url)}" target="_blank" rel="noopener" title="From the organisation's website">↗</a></span>` : "") +
     (r.controlled_by && !r.operator ? `<span class="ctl">Controlled by ${esc(r.controlled_by)}</span>` : "");
   const norm = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  const hay = (r) => " " + norm([r.organisation, r.known_as, r.aliases, r.controlled_by, r.sector, r.legal_form, r.tax_status, r.designation, r.operator, r.activity_assessed,
+  const hay = (r) => " " + norm([r.organisation, r.known_as, r.aliases, r.description, r.controlled_by, r.sector, r.legal_form, r.tax_status, r.designation, r.operator, r.activity_assessed,
     r.evaluation_evidence, r.relationships, r.other_evaluations.map((o) => o.title).join(" "), r.contact].join(" ")).replace(/[^a-z0-9@.]+/g, " ") + " ";
   D.forEach((r) => (r._h = hay(r)));
   const matchQ = (r, q) => norm(q).split(/[^a-z0-9@.]+/).filter(Boolean).every((w) => r._h.includes(" " + w));
