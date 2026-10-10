@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>US AI Evaluators</title>
+<style>
+  :root { --bg:#fbfbfa; --panel:#ffffff; --ink:#1d2329; --muted:#6b7280; --line:#e5e7eb; --head:#f3f4f6; --accent:#2f5d8a; --pend:#9a6b00; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  header { padding:20px 16px 8px; max-width:1600px; margin:0 auto; }
+  h1 { font-size:20px; font-weight:600; margin:0; }
+  .meta { color:var(--muted); font-size:13px; margin-top:4px; }
+  .meta a { color:var(--accent); }
+  .filters { max-width:1600px; margin:0 auto; padding:8px 16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .filters input, .filters select { font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); }
+  .filters input { flex:1 1 220px; min-width:180px; }
+  .filters select { flex:0 1 auto; max-width:220px; }
+  .filters button { font:inherit; font-size:13px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:var(--panel); cursor:pointer; color:var(--muted); }
+  .count { color:var(--muted); font-size:13px; margin-left:auto; }
+  .wrap { max-width:1600px; margin:0 auto; padding:0 16px 32px; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); min-width:980px; }
+  th, td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { background:var(--head); font-weight:600; font-size:12px; position:sticky; top:0; cursor:pointer; user-select:none; white-space:nowrap; }
+  td { font-size:13px; }
+  td.org { font-weight:600; min-width:160px; }
+  td.rel { min-width:320px; }
+  td a { color:var(--accent); text-decoration:none; }
+  td a:hover { text-decoration:underline; }
+  .rel-item { display:block; margin-bottom:3px; }
+  .pending { color:var(--pend); white-space:nowrap; }
+  .ok { color:#2e7d4f; white-space:nowrap; }
+</style>
+</head>
+<body>
+<header>
+  <h1>US Organisations Evaluating Frontier AI Systems</h1>
+  <div class="meta">As of <span id="asof"></span> · <a href="us_ai_evaluators.csv" download>Download CSV</a></div>
+</header>
+<div class="filters">
+  <input id="q" type="search" placeholder="Search organisation, evidence or relationship" aria-label="Search">
+  <select id="f-form" aria-label="Institutional form"><option value="">All forms</option></select>
+  <select id="f-prop" aria-label="Property"><option value="">All properties</option></select>
+  <select id="f-method" aria-label="Method"><option value="">All methods</option></select>
+  <select id="f-domain" aria-label="Domain"><option value="">All domains</option></select>
+  <select id="f-rel" aria-label="Relationship type"><option value="">All relationship types</option></select>
+  <select id="f-dev" aria-label="Developer relationship"><option value="">Developer relationship: any</option><option value="Yes">Developer relationship: yes</option><option value="No">Developer relationship: no</option></select>
+  <select id="f-status" aria-label="Status"><option value="">Any status</option><option>Verified</option><option>Manual check pending</option></select>
+  <button id="reset" type="button">Reset</button>
+  <span class="count" id="count"></span>
+</div>
+<div class="wrap">
+  <table>
+    <thead><tr>
+      <th data-k="organisation">Organisation</th>
+      <th data-k="institutional_form">Institutional form</th>
+      <th data-k="activity_assessed">Activity assessed</th>
+      <th data-k="evaluation_evidence">Evaluation evidence</th>
+      <th data-k="relationships">Funding and relationships</th>
+      <th data-k="status">Status</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.DATA, $ = (id) => document.getElementById(id);
+  $("asof").textContent = window.ASOF;
+  const formOf = (r) => (r.institutional_form || "").split(" (")[0];
+  const uniq = (f) => [...new Set(D.flatMap(f))].filter(Boolean).sort((a, b) => a.localeCompare(b));
+  const fill = (id, vals) => vals.forEach((v) => { const o = document.createElement("option"); o.value = o.textContent = v; $(id).appendChild(o); });
+  fill("f-form", uniq((r) => [formOf(r)]));
+  fill("f-prop", uniq((r) => r.properties));
+  fill("f-method", uniq((r) => r.methods));
+  fill("f-domain", uniq((r) => r.domains));
+  fill("f-rel", uniq((r) => r.relationship_types));
+  const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const splitRel = (t) => String(t || "").split(/;\s*(?=[A-Z][A-Za-z\- ]+:|\d[\d,]* funders|No relationship)/);
+  let sortK = "organisation", sortDir = 1;
+  function render() {
+    const q = $("q").value.trim().toLowerCase();
+    const f = { form: $("f-form").value, prop: $("f-prop").value, method: $("f-method").value, domain: $("f-domain").value,
+                rel: $("f-rel").value, dev: $("f-dev").value, status: $("f-status").value };
+    const rows = D.filter((r) =>
+      (!f.form || formOf(r) === f.form) && (!f.prop || r.properties.includes(f.prop)) && (!f.method || r.methods.includes(f.method)) &&
+      (!f.domain || r.domains.includes(f.domain)) && (!f.rel || r.relationship_types.includes(f.rel)) &&
+      (!f.dev || r.developer_relationship === f.dev) && (!f.status || r.status === f.status) &&
+      (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships].join(" ").toLowerCase().includes(q))
+    ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
+    $("rows").innerHTML = rows.map((r) => `<tr>
+      <td class="org">${esc(r.organisation)}</td>
+      <td>${esc(r.institutional_form)}</td>
+      <td>${esc(r.activity_assessed)}</td>
+      <td>${r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(r.evaluation_evidence)}</a>` : esc(r.evaluation_evidence)}</td>
+      <td class="rel">${splitRel(r.relationships).map((x) => `<span class="rel-item">${esc(x)}</span>`).join("")}</td>
+      <td class="${r.status === "Verified" ? "ok" : "pending"}">${esc(r.status)}</td></tr>`).join("");
+    $("count").textContent = `${rows.length} of ${D.length}`;
+  }
+  ["q", "f-form", "f-prop", "f-method", "f-domain", "f-rel", "f-dev", "f-status"].forEach((id) => $(id).addEventListener("input", render));
+  $("reset").addEventListener("click", () => { document.querySelectorAll(".filters input, .filters select").forEach((el) => (el.value = "")); render(); });
+  document.querySelectorAll("th[data-k]").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.k; sortDir = sortK === k ? -sortDir : 1; sortK = k; render();
+  }));
+  render();
+})();
+</script>
+</body>
+</html>
