@@ -18,19 +18,19 @@ def form(f):
     return f.split(" (")[0]
 rows = []
 for t in sorted(T, key=lambda x: x["organisation"].lower()):
-    rows.append({"organisation": t["organisation"], "institutional_form": t["institutional_form"], "form": form(t["institutional_form"]),
+    rows.append({"organisation": t["organisation"], "website": t["website"], "institutional_form": t["institutional_form"], "form": form(t["institutional_form"]),
                  "activity_assessed": t["activity_assessed"], "evaluation_evidence": t["evaluation_evidence"], "evidence_url": t["evidence_url"],
                  "evidence_author": "Organisation itself" if "organisation-authored" in t["evaluation_evidence"] else "Developer or other publisher",
                  "relationships": t["relationships"], "properties": t["properties"], "methods": t["methods"], "domains": t["domains"],
                  "relationship_types": t["relationship_types"], "developer_relationship": t["developer_relationship"],
-                 "developers": developers(t["relationships"]), "contact": t["contact"], "contact_emails": t["contact_emails"]})
+                 "developers": developers(t["relationships"]), "contact": t["contact"], "contact_emails": t["contact_emails"], "contact_form": t["contact_form"]})
 open("data.js", "w").write("window.DATA=" + json.dumps(rows, ensure_ascii=False) + ";window.ASOF='10 October 2026';")
 with open("us_ai_evaluators.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f)
-    w.writerow(["Organisation", "Institutional form", "Activity assessed", "Evaluation evidence", "Evidence link", "Funding and relationships",
+    w.writerow(["Organisation", "Website", "Institutional form", "Activity assessed", "Evaluation evidence", "Evidence link", "Funding and relationships",
                 "Properties", "Methods", "Domains", "Relationship types", "Developer relationship", "Developers named", "Contact"])
     for r in rows:
-        w.writerow([r["organisation"], r["institutional_form"], r["activity_assessed"], r["evaluation_evidence"], r["evidence_url"], r["relationships"],
+        w.writerow([r["organisation"], r["website"], r["institutional_form"], r["activity_assessed"], r["evaluation_evidence"], r["evidence_url"], r["relationships"],
                     "; ".join(r["properties"]), "; ".join(r["methods"]), "; ".join(r["domains"]), "; ".join(r["relationship_types"]),
                     r["developer_relationship"], "; ".join(r["developers"]), r["contact"]])
 print(len(rows), "rows")

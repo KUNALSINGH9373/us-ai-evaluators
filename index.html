@@ -53,13 +53,14 @@
   td.ct { width:13%; font-size:12.5px; }
   .ct a { display:block; color:var(--link); text-decoration:none; overflow-wrap:break-word; padding:1px 0; }
   .ct a:hover { text-decoration:underline; }
-  .ct .none { color:var(--muted); font-size:12px; }
   .form-l { display:inline-flex; align-items:center; gap:7px; font-weight:500; color:var(--ink2); }
   .form-l i { width:3px; height:14px; border-radius:1px; display:inline-block; }
   .sub { display:block; color:var(--muted); font-size:11.5px; margin-top:2px; padding-left:10px; }
   .kv { margin:0; display:grid; grid-template-columns:64px 1fr; gap:3px 8px; }
   .kv dt { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
   .kv dd { margin:0; color:var(--ink2); }
+  td.org a { color:var(--ink); text-decoration:none; border-bottom:1px solid var(--rule2); }
+  td.org a:hover { color:var(--link); border-bottom-color:var(--link); }
   .ev a { color:var(--link); text-decoration:none; font-weight:500; }
   .ev a:hover { text-decoration:underline; }
   .ev .note { display:block; color:var(--muted); font-size:11.5px; margin-top:4px; }
@@ -164,9 +165,7 @@
   };
   const contactCell = (r) => {
     if (r.contact_emails.length) return r.contact_emails.map((e) => `<a href="mailto:${esc(e)}">${esc(e).replace("@", "@<wbr>")}</a>`).join("");
-    const m = String(r.contact || "").match(/^Contact form only:\s*(\S+)/);
-    if (m) return `<a href="${esc(m[1])}" target="_blank" rel="noopener">Contact form</a>`;
-    return `<span class="none">${esc(String(r.contact || "").replace(/\s*\(.*\)$/, ""))}</span>`;
+    return r.contact_form ? `<a href="${esc(r.contact_form)}" target="_blank" rel="noopener">Contact form</a>` : "";
   };
   const formCell = (r) => {
     const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
@@ -184,7 +183,7 @@
       (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships, r.contact].join(" ").toLowerCase().includes(q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
     $("rows").innerHTML = rows.length ? rows.map((r) => `<tr>
-      <td class="org">${esc(r.organisation)}</td>
+      <td class="org">${r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation)}</td>
       <td class="form">${formCell(r)}</td>
       <td class="act">${activity(r.activity_assessed)}</td>
       <td class="ev">${evidence(r)}</td>
