@@ -40,16 +40,20 @@
   .count b { color:var(--ink); font-weight:600; }
   #reset { font:inherit; font-size:12px; background:none; border:none; color:var(--link); cursor:pointer; padding:0; }
   .wrap { margin-top:16px; background:var(--paper); border:1px solid var(--rule); border-radius:4px; overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; min-width:1040px; }
+  table { width:100%; border-collapse:collapse; min-width:1180px; }
   th { position:sticky; top:0; z-index:1; background:var(--paper); text-align:left; padding:12px 14px 10px; font-size:10.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--navy); border-bottom:2px solid var(--navy); cursor:pointer; user-select:none; white-space:nowrap; }
   th .arr { margin-left:5px; font-size:9px; color:var(--muted); }
   td { padding:14px; vertical-align:top; border-bottom:1px solid var(--rule); }
   tbody tr:hover td { background:#fbfaf7; }
-  td.org { width:16%; font:600 14.5px/1.35 var(--serif); color:var(--ink); }
+  td.org { width:14%; font:600 14.5px/1.35 var(--serif); color:var(--ink); }
   td.form { width:9%; white-space:nowrap; }
   td.act { width:20%; }
-  td.ev { width:21%; }
-  td.rel { width:34%; }
+  td.ev { width:18%; }
+  td.rel { width:30%; }
+  td.ct { width:13%; font-size:12.5px; }
+  .ct a { display:block; color:var(--link); text-decoration:none; overflow-wrap:break-word; padding:1px 0; }
+  .ct a:hover { text-decoration:underline; }
+  .ct .none { color:var(--muted); font-size:12px; }
   .form-l { display:inline-flex; align-items:center; gap:7px; font-weight:500; color:var(--ink2); }
   .form-l i { width:3px; height:14px; border-radius:1px; display:inline-block; }
   .sub { display:block; color:var(--muted); font-size:11.5px; margin-top:2px; padding-left:10px; }
@@ -109,6 +113,7 @@
         <th data-k="activity_assessed">Activity assessed</th>
         <th data-k="evaluation_evidence">Evaluation evidence</th>
         <th data-k="relationships">Funding and relationships</th>
+        <th data-k="contact">Contact</th>
       </tr></thead>
       <tbody id="rows"></tbody>
     </table>
@@ -157,6 +162,12 @@
     const t = r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title);
     return t + (rest.length ? `<span class="note">${esc(rest.join(" — "))}</span>` : "");
   };
+  const contactCell = (r) => {
+    if (r.contact_emails.length) return r.contact_emails.map((e) => `<a href="mailto:${esc(e)}">${esc(e).replace("@", "@<wbr>")}</a>`).join("");
+    const m = String(r.contact || "").match(/^Contact form only:\s*(\S+)/);
+    if (m) return `<a href="${esc(m[1])}" target="_blank" rel="noopener">Contact form</a>`;
+    return `<span class="none">${esc(String(r.contact || "").replace(/\s*\(.*\)$/, ""))}</span>`;
+  };
   const formCell = (r) => {
     const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
     return `<span class="form-l"><i style="background:${FORMC[r.form] || "var(--muted)"}"></i>${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
@@ -170,15 +181,16 @@
       (!v("f-method") || r.methods.includes(v("f-method"))) && (!v("f-domain") || r.domains.includes(v("f-domain"))) &&
       (!v("f-author") || r.evidence_author === v("f-author")) && (!v("f-rel") || r.relationship_types.includes(v("f-rel"))) &&
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
-      (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships].join(" ").toLowerCase().includes(q))
+      (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships, r.contact].join(" ").toLowerCase().includes(q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
     $("rows").innerHTML = rows.length ? rows.map((r) => `<tr>
       <td class="org">${esc(r.organisation)}</td>
       <td class="form">${formCell(r)}</td>
       <td class="act">${activity(r.activity_assessed)}</td>
       <td class="ev">${evidence(r)}</td>
-      <td class="rel"><ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul></td></tr>`).join("")
-      : `<tr><td colspan="5" class="empty">No organisations match these filters.</td></tr>`;
+      <td class="rel"><ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul></td>
+      <td class="ct">${contactCell(r)}</td></tr>`).join("")
+      : `<tr><td colspan="6" class="empty">No organisations match these filters.</td></tr>`;
     $("count").innerHTML = `Showing <b>${rows.length}</b> of ${D.length}`;
     IDS.slice(1).forEach((id) => $(id).classList.toggle("on", !!$(id).value));
     document.querySelectorAll("th[data-k]").forEach((th) => {
