@@ -4,132 +4,162 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>US AI Evaluators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:#f7f8fb; --panel:#ffffff; --ink:#1f2933; --muted:#6b7280; --line:#e6e8ef; --head:#eef1f7; --accent:#3b6aa0;
-    /* institutional form */
-    --fp:#7c8fd6; --fp-bg:#eef1fc; --np:#5fae8b; --np-bg:#eaf6f0; --ff:#e0a15e; --ff-bg:#fdf3e7; --ua:#d07a9a; --ua-bg:#fbedf2;
-    /* activity */
-    --prop:#e8f0fe; --prop-ink:#2f5aa8; --meth:#fff3dc; --meth-ink:#8a5a00; --dom:#e3f5f3; --dom-ink:#1f6f66;
-    /* relationships */
-    --r-dev:#fdeee9; --r-dev-ink:#9a4a2e; --r-gov:#e9f0fb; --r-gov-ink:#2d5b94; --r-phil:#ebf6ec; --r-phil-ink:#2f7a3e;
-    --r-corp:#f2edfb; --r-corp-ink:#5d4a99; --r-none:#f1f2f4; --r-none-ink:#6b7280;
+    --bg:#f6f5f1; --paper:#ffffff; --ink:#1c2430; --ink2:#46505e; --muted:#7a828e; --rule:#e3e1da; --rule2:#cfccc3; --navy:#1f3350; --link:#28507f;
+    --c-dev:#b4644a; --c-gov:#3e5f8a; --c-phil:#5c8a5e; --c-corp:#7d6c9f; --c-none:#a3a8af;
+    --f-fp:#3e5f8a; --f-np:#5c8a5e; --f-ff:#b08a45; --f-ua:#8d5b77;
+    --serif:"Source Serif 4", Georgia, "Times New Roman", serif; --sans:Inter, -apple-system, "Segoe UI", Arial, sans-serif;
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
-  header { padding:20px 16px 8px; max-width:1600px; margin:0 auto; }
-  h1 { font-size:20px; font-weight:600; margin:0; }
-  .meta { color:var(--muted); font-size:13px; margin-top:4px; }
-  .meta a { color:var(--accent); }
-  .filters { max-width:1600px; margin:0 auto; padding:8px 16px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-  .filters input, .filters select { font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); }
-  .filters input { flex:1 1 240px; min-width:180px; }
-  .filters select { flex:0 1 auto; max-width:230px; }
-  .filters select.on { border-color:var(--accent); background:#f1f5fc; }
-  #f-form { background:linear-gradient(90deg, var(--fp-bg), var(--np-bg)); }
-  #f-prop { background:var(--prop); } #f-method { background:var(--meth); } #f-domain { background:var(--dom); }
-  #f-rel, #f-dev, #f-devname { background:var(--r-dev); } #f-author { background:var(--r-none); }
-  .filters button { font:inherit; font-size:13px; padding:6px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); cursor:pointer; color:var(--muted); }
-  .count { color:var(--muted); font-size:13px; margin-left:auto; }
-  .wrap { max-width:1600px; margin:0 auto; padding:0 16px 32px; overflow-x:auto; }
-  table { width:100%; border-collapse:separate; border-spacing:0; background:var(--panel); border:1px solid var(--line); border-radius:10px; min-width:980px; overflow:hidden; }
-  th, td { text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line); }
-  th { background:var(--head); font-weight:600; font-size:12px; position:sticky; top:0; cursor:pointer; user-select:none; white-space:nowrap; color:#3a4452; }
-  th .arr { color:var(--muted); font-size:10px; margin-left:4px; }
-  td { font-size:13px; }
-  tbody tr { transition:background .15s; }
-  tbody tr:nth-child(even) { background:#fbfcfe; }
-  tbody tr:hover { background:#f3f6fb; }
-  tr.fp td:first-child { box-shadow:inset 4px 0 0 var(--fp); }
-  tr.np td:first-child { box-shadow:inset 4px 0 0 var(--np); }
-  tr.ff td:first-child { box-shadow:inset 4px 0 0 var(--ff); }
-  tr.ua td:first-child { box-shadow:inset 4px 0 0 var(--ua); }
-  td.org { font-weight:600; min-width:170px; padding-left:14px; }
-  td.act { min-width:230px; }
-  td.rel { min-width:330px; }
-  td a { color:var(--accent); text-decoration:none; }
-  td a:hover { text-decoration:underline; }
-  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; white-space:nowrap; }
-  .pill.fp { background:var(--fp-bg); color:#4152a0; } .pill.np { background:var(--np-bg); color:#2f7656; }
-  .pill.ff { background:var(--ff-bg); color:#8f5a1c; } .pill.ua { background:var(--ua-bg); color:#9a3d62; }
-  .sub { display:block; color:var(--muted); font-size:11px; margin-top:3px; }
-  .chip { display:inline-block; padding:2px 8px; margin:0 4px 4px 0; border-radius:6px; font-size:12px; }
-  .chip.p { background:var(--prop); color:var(--prop-ink); } .chip.m { background:var(--meth); color:var(--meth-ink); } .chip.d { background:var(--dom); color:var(--dom-ink); }
-  .ri { display:block; padding:4px 8px; margin-bottom:4px; border-radius:6px; font-size:12.5px; border-left:3px solid transparent; }
-  .ri.dev { background:var(--r-dev); color:var(--r-dev-ink); border-left-color:#e7a38a; }
-  .ri.gov { background:var(--r-gov); color:var(--r-gov-ink); border-left-color:#8fb0de; }
-  .ri.phil { background:var(--r-phil); color:var(--r-phil-ink); border-left-color:#93c99d; }
-  .ri.corp { background:var(--r-corp); color:var(--r-corp-ink); border-left-color:#b3a3e0; }
-  .ri.none { background:var(--r-none); color:var(--r-none-ink); border-left-color:#c9ccd2; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:13.5px/1.5 var(--sans); -webkit-font-smoothing:antialiased; }
+  .top { border-top:4px solid var(--navy); background:var(--paper); border-bottom:1px solid var(--rule); }
+  .top-in { max-width:1560px; margin:0 auto; padding:26px 24px 20px; display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 32px; }
+  h1 { font:600 27px/1.2 var(--serif); margin:0; color:var(--navy); letter-spacing:-.005em; }
+  .meta { color:var(--muted); font-size:12.5px; margin-top:6px; }
+  .meta b { color:var(--ink2); font-weight:500; }
+  .dl { margin-left:auto; font-size:12.5px; font-weight:500; color:var(--navy); text-decoration:none; border:1px solid var(--navy); padding:7px 14px; border-radius:3px; }
+  .dl:hover { background:var(--navy); color:#fff; }
+  main { min-width:0; max-width:1560px; margin:0 auto; padding:20px 24px 40px; }
+  .panel { background:var(--paper); border:1px solid var(--rule); border-radius:4px; padding:16px 18px 14px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap:12px 16px; }
+  .fld { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  .fld.wide { grid-column:span 2; }
+  .fld label { font-size:10.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); }
+  .fld input, .fld select { font:inherit; font-size:13px; height:34px; padding:0 10px; border:1px solid var(--rule2); border-radius:3px; background:#fff; color:var(--ink); width:100%; }
+  .fld input:focus, .fld select:focus { outline:none; border-color:var(--navy); box-shadow:0 0 0 2px rgba(31,51,80,.12); }
+  .fld select.on { border-color:var(--navy); background:#f3f5f9; }
+  .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; margin-top:14px; padding-top:12px; border-top:1px solid var(--rule); font-size:12px; color:var(--ink2); }
+  .key { display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .key span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:8px; height:8px; border-radius:50%; flex:none; display:inline-block; }
+  .count { margin-left:auto; color:var(--muted); }
+  .count b { color:var(--ink); font-weight:600; }
+  #reset { font:inherit; font-size:12px; background:none; border:none; color:var(--link); cursor:pointer; padding:0; }
+  .wrap { margin-top:16px; background:var(--paper); border:1px solid var(--rule); border-radius:4px; overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:1040px; }
+  th { position:sticky; top:0; z-index:1; background:var(--paper); text-align:left; padding:12px 14px 10px; font-size:10.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--navy); border-bottom:2px solid var(--navy); cursor:pointer; user-select:none; white-space:nowrap; }
+  th .arr { margin-left:5px; font-size:9px; color:var(--muted); }
+  td { padding:14px; vertical-align:top; border-bottom:1px solid var(--rule); }
+  tbody tr:hover td { background:#fbfaf7; }
+  td.org { width:16%; font:600 14.5px/1.35 var(--serif); color:var(--ink); }
+  td.form { width:9%; white-space:nowrap; }
+  td.act { width:20%; }
+  td.ev { width:21%; }
+  td.rel { width:34%; }
+  .form-l { display:inline-flex; align-items:center; gap:7px; font-weight:500; color:var(--ink2); }
+  .form-l i { width:3px; height:14px; border-radius:1px; display:inline-block; }
+  .sub { display:block; color:var(--muted); font-size:11.5px; margin-top:2px; padding-left:10px; }
+  .kv { margin:0; display:grid; grid-template-columns:64px 1fr; gap:3px 8px; }
+  .kv dt { font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+  .kv dd { margin:0; color:var(--ink2); }
+  .ev a { color:var(--link); text-decoration:none; font-weight:500; }
+  .ev a:hover { text-decoration:underline; }
+  .ev .note { display:block; color:var(--muted); font-size:11.5px; margin-top:4px; }
+  .rl { list-style:none; margin:0; padding:0; }
+  .rl li { display:flex; gap:9px; padding:3px 0; color:var(--ink2); }
+  .rl li + li { border-top:1px dotted var(--rule); padding-top:5px; margin-top:2px; }
+  .rl .dot { margin-top:6px; }
+  .rl b { font-weight:600; color:var(--ink); }
+  .empty { padding:40px; text-align:center; color:var(--muted); }
+  @media (max-width:640px) { .top-in, main { padding-left:16px; padding-right:16px; } h1 { font-size:22px; } .grid { grid-template-columns:1fr 1fr; } .fld.wide { grid-column:1 / -1; } .dl { margin-left:0; } .count { margin-left:0; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>US Organisations Evaluating Frontier AI Systems</h1>
-  <div class="meta">As of <span id="asof"></span> · <a href="us_ai_evaluators.csv" download>Download CSV</a></div>
-</header>
-<div class="filters">
-  <input id="q" type="search" placeholder="Search organisation, evidence or relationship" aria-label="Search">
-  <select id="f-form" aria-label="Institutional form"><option value="">All forms</option></select>
-  <select id="f-prop" aria-label="Property"><option value="">All properties</option></select>
-  <select id="f-method" aria-label="Method"><option value="">All methods</option></select>
-  <select id="f-domain" aria-label="Domain"><option value="">All domains</option></select>
-  <select id="f-author" aria-label="Evidence published by"><option value="">Evidence published by: anyone</option></select>
-  <select id="f-rel" aria-label="Relationship type"><option value="">All relationship types</option></select>
-  <select id="f-dev" aria-label="Developer relationship"><option value="">Developer relationship: any</option><option value="Yes">Developer relationship: yes</option><option value="No">Developer relationship: no</option></select>
-  <select id="f-devname" aria-label="Developer"><option value="">Any developer</option></select>
-  <button id="reset" type="button">Reset</button>
-  <span class="count" id="count"></span>
-</div>
-<div class="wrap">
-  <table>
-    <thead><tr>
-      <th data-k="organisation">Organisation</th>
-      <th data-k="institutional_form">Institutional form</th>
-      <th data-k="activity_assessed">Activity assessed</th>
-      <th data-k="evaluation_evidence">Evaluation evidence</th>
-      <th data-k="relationships">Funding and relationships</th>
-    </tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-</div>
+<div class="top"><div class="top-in">
+  <div>
+    <h1>US Organisations Evaluating Frontier AI Systems</h1>
+    <div class="meta">Dataset as of <b id="asof"></b> · <b id="total"></b> organisations</div>
+  </div>
+  <a class="dl" href="us_ai_evaluators.csv" download>Download CSV</a>
+</div></div>
+<main>
+  <section class="panel">
+    <div class="grid">
+      <div class="fld wide"><label for="q">Search</label><input id="q" type="search" placeholder="Organisation, evidence or relationship"></div>
+      <div class="fld"><label for="f-form">Institutional form</label><select id="f-form"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-prop">Property</label><select id="f-prop"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-method">Method</label><select id="f-method"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-domain">Domain</label><select id="f-domain"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-author">Evidence published by</label><select id="f-author"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-rel">Relationship type</label><select id="f-rel"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-dev">Developer relationship</label><select id="f-dev"><option value="">All</option><option>Yes</option><option>No</option></select></div>
+      <div class="fld"><label for="f-devname">Developer</label><select id="f-devname"><option value="">All</option></select></div>
+    </div>
+    <div class="bar">
+      <div class="key">
+        <span><i class="dot" style="background:var(--c-dev)"></i>Developer</span>
+        <span><i class="dot" style="background:var(--c-gov)"></i>Government</span>
+        <span><i class="dot" style="background:var(--c-phil)"></i>Philanthropic</span>
+        <span><i class="dot" style="background:var(--c-corp)"></i>Corporate and ownership</span>
+        <span><i class="dot" style="background:var(--c-none)"></i>None identified</span>
+      </div>
+      <span class="count" id="count"></span>
+      <button id="reset" type="button">Clear filters</button>
+    </div>
+  </section>
+  <div class="wrap">
+    <table>
+      <thead><tr>
+        <th data-k="organisation">Organisation</th>
+        <th data-k="form">Form</th>
+        <th data-k="activity_assessed">Activity assessed</th>
+        <th data-k="evaluation_evidence">Evaluation evidence</th>
+        <th data-k="relationships">Funding and relationships</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
 <script src="data.js"></script>
 <script>
 (function () {
   const D = window.DATA, $ = (id) => document.getElementById(id);
-  $("asof").textContent = window.ASOF;
-  const FORMCLS = { "For-profit": "fp", "Non-profit": "np", "FFRDC": "ff", "UARC": "ua" };
+  $("asof").textContent = window.ASOF; $("total").textContent = D.length;
+  const FORMC = { "For-profit": "var(--f-fp)", "Non-profit": "var(--f-np)", "FFRDC": "var(--f-ff)", "UARC": "var(--f-ua)" };
   const uniq = (f) => [...new Set(D.flatMap(f))].filter(Boolean).sort((a, b) => a.localeCompare(b));
-  const fill = (id, vals, label) => vals.forEach((v) => { const o = document.createElement("option"); o.value = v; o.textContent = label ? label(v) : v; $(id).appendChild(o); });
+  const fill = (id, vals) => vals.forEach((v) => { const o = document.createElement("option"); o.value = o.textContent = v; $(id).appendChild(o); });
   fill("f-form", uniq((r) => [r.form]));
   fill("f-prop", uniq((r) => r.properties));
   fill("f-method", uniq((r) => r.methods));
   fill("f-domain", uniq((r) => r.domains));
-  fill("f-author", uniq((r) => [r.evidence_author]), (v) => "Evidence published by: " + v.toLowerCase());
+  fill("f-author", uniq((r) => [r.evidence_author]));
   fill("f-rel", uniq((r) => r.relationship_types));
   const devCount = {}; D.forEach((r) => r.developers.forEach((d) => (devCount[d] = (devCount[d] || 0) + 1)));
   fill("f-devname", Object.keys(devCount).sort((a, b) => devCount[b] - devCount[a] || a.localeCompare(b)));
   const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const splitRel = (t) => String(t || "").split(/;\s*(?=[A-Z][A-Za-z\- ]+:|\d[\d,]* funders|No relationship)/);
-  const relCls = (it) => {
-    if (/^No relationship/.test(it)) return "none";
-    if (/^(Funding from developer|Paid engagement by developer|Developer equity stake|Model access|In-kind support from developer|Research collaboration with developer|Equity stake in developer|Own model development)/.test(it)) return "dev";
-    if (/^(Federal funding|Foreign government funding|Government evaluation agreement)/.test(it)) return "gov";
-    if (/^(\d[\d,]* funders|Philanthropic|Fiscal sponsor)/.test(it)) return "phil";
-    return "corp";
+  const relC = (it) => {
+    if (/^No relationship/.test(it)) return "var(--c-none)";
+    if (/^(Funding from developer|Paid engagement by developer|Developer equity stake|Model access|In-kind support from developer|Research collaboration with developer|Equity stake in developer|Own model development)/.test(it)) return "var(--c-dev)";
+    if (/^(Federal funding|Foreign government funding|Government evaluation agreement)/.test(it)) return "var(--c-gov)";
+    if (/^(\d[\d,]* funders|Philanthropic|Fiscal sponsor)/.test(it)) return "var(--c-phil)";
+    return "var(--c-corp)";
   };
-  const splitVals = (s) => s.split(/;\s*(?![^()]*\))/).map((v) => v.trim().replace(/[;.]$/, "")).filter((v) => v && v !== "scope only");
+  const relItem = (it) => {
+    const m = it.match(/^([A-Z][A-Za-z\- ]+):\s*([\s\S]*)$/);
+    const body = m ? `<b>${esc(m[1])}.</b> ${esc(m[2])}` : esc(it);
+    return `<li><i class="dot" style="background:${relC(it)}"></i><span>${body}</span></li>`;
+  };
   const activity = (t) => {
     const parts = String(t || "").split(/(Property|Method|Domain):\s*/); let html = "";
     for (let i = 1; i < parts.length - 1; i += 2) {
-      const c = parts[i][0].toLowerCase();
-      html += splitVals(parts[i + 1]).map((v) => `<span class="chip ${c}">${esc(v)}</span>`).join("");
+      const vals = parts[i + 1].split(/;\s*(?![^()]*\))/).map((v) => v.trim().replace(/[;.]$/, "")).filter(Boolean);
+      html += `<dt>${parts[i]}</dt><dd>${esc(vals.join("; "))}</dd>`;
     }
-    return html || esc(t);
+    return html ? `<dl class="kv">${html}</dl>` : esc(t);
+  };
+  const evidence = (r) => {
+    const [title, ...rest] = String(r.evaluation_evidence || "").split(" — ");
+    const t = r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(title)}</a>` : esc(title);
+    return t + (rest.length ? `<span class="note">${esc(rest.join(" — "))}</span>` : "");
   };
   const formCell = (r) => {
     const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
-    return `<span class="pill ${FORMCLS[r.form] || ""}">${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
+    return `<span class="form-l"><i style="background:${FORMC[r.form] || "var(--muted)"}"></i>${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
   };
   const IDS = ["q", "f-form", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
   let sortK = "organisation", sortDir = 1;
@@ -142,13 +172,14 @@
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
       (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships].join(" ").toLowerCase().includes(q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
-    $("rows").innerHTML = rows.map((r) => `<tr class="${FORMCLS[r.form] || ""}">
+    $("rows").innerHTML = rows.length ? rows.map((r) => `<tr>
       <td class="org">${esc(r.organisation)}</td>
-      <td>${formCell(r)}</td>
+      <td class="form">${formCell(r)}</td>
       <td class="act">${activity(r.activity_assessed)}</td>
-      <td>${r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(r.evaluation_evidence)}</a>` : esc(r.evaluation_evidence)}</td>
-      <td class="rel">${splitRel(r.relationships).map((x) => `<span class="ri ${relCls(x)}">${esc(x)}</span>`).join("")}</td></tr>`).join("");
-    $("count").textContent = `${rows.length} of ${D.length}`;
+      <td class="ev">${evidence(r)}</td>
+      <td class="rel"><ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul></td></tr>`).join("")
+      : `<tr><td colspan="5" class="empty">No organisations match these filters.</td></tr>`;
+    $("count").innerHTML = `Showing <b>${rows.length}</b> of ${D.length}`;
     IDS.slice(1).forEach((id) => $(id).classList.toggle("on", !!$(id).value));
     document.querySelectorAll("th[data-k]").forEach((th) => {
       th.querySelector(".arr")?.remove();
