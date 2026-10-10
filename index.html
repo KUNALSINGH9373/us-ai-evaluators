@@ -5,31 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>US AI Evaluators</title>
 <style>
-  :root { --bg:#fbfbfa; --panel:#ffffff; --ink:#1d2329; --muted:#6b7280; --line:#e5e7eb; --head:#f3f4f6; --accent:#2f5d8a; --pend:#9a6b00; }
+  :root {
+    --bg:#f7f8fb; --panel:#ffffff; --ink:#1f2933; --muted:#6b7280; --line:#e6e8ef; --head:#eef1f7; --accent:#3b6aa0;
+    /* institutional form */
+    --fp:#7c8fd6; --fp-bg:#eef1fc; --np:#5fae8b; --np-bg:#eaf6f0; --ff:#e0a15e; --ff-bg:#fdf3e7; --ua:#d07a9a; --ua-bg:#fbedf2;
+    /* activity */
+    --prop:#e8f0fe; --prop-ink:#2f5aa8; --meth:#fff3dc; --meth-ink:#8a5a00; --dom:#e3f5f3; --dom-ink:#1f6f66;
+    /* relationships */
+    --r-dev:#fdeee9; --r-dev-ink:#9a4a2e; --r-gov:#e9f0fb; --r-gov-ink:#2d5b94; --r-phil:#ebf6ec; --r-phil-ink:#2f7a3e;
+    --r-corp:#f2edfb; --r-corp-ink:#5d4a99; --r-none:#f1f2f4; --r-none-ink:#6b7280;
+  }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
   header { padding:20px 16px 8px; max-width:1600px; margin:0 auto; }
   h1 { font-size:20px; font-weight:600; margin:0; }
   .meta { color:var(--muted); font-size:13px; margin-top:4px; }
   .meta a { color:var(--accent); }
-  .filters { max-width:1600px; margin:0 auto; padding:8px 16px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-  .filters input, .filters select { font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--panel); color:var(--ink); }
-  .filters input { flex:1 1 220px; min-width:180px; }
-  .filters select { flex:0 1 auto; max-width:220px; }
-  .filters button { font:inherit; font-size:13px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:var(--panel); cursor:pointer; color:var(--muted); }
+  .filters { max-width:1600px; margin:0 auto; padding:8px 16px 12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .filters input, .filters select { font:inherit; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); }
+  .filters input { flex:1 1 240px; min-width:180px; }
+  .filters select { flex:0 1 auto; max-width:230px; }
+  .filters select.on { border-color:var(--accent); background:#f1f5fc; }
+  #f-form { background:linear-gradient(90deg, var(--fp-bg), var(--np-bg)); }
+  #f-prop { background:var(--prop); } #f-method { background:var(--meth); } #f-domain { background:var(--dom); }
+  #f-rel, #f-dev, #f-devname { background:var(--r-dev); } #f-author { background:var(--r-none); }
+  .filters button { font:inherit; font-size:13px; padding:6px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); cursor:pointer; color:var(--muted); }
   .count { color:var(--muted); font-size:13px; margin-left:auto; }
   .wrap { max-width:1600px; margin:0 auto; padding:0 16px 32px; overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); min-width:980px; }
-  th, td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
-  th { background:var(--head); font-weight:600; font-size:12px; position:sticky; top:0; cursor:pointer; user-select:none; white-space:nowrap; }
+  table { width:100%; border-collapse:separate; border-spacing:0; background:var(--panel); border:1px solid var(--line); border-radius:10px; min-width:980px; overflow:hidden; }
+  th, td { text-align:left; vertical-align:top; padding:9px 10px; border-bottom:1px solid var(--line); }
+  th { background:var(--head); font-weight:600; font-size:12px; position:sticky; top:0; cursor:pointer; user-select:none; white-space:nowrap; color:#3a4452; }
+  th .arr { color:var(--muted); font-size:10px; margin-left:4px; }
   td { font-size:13px; }
-  td.org { font-weight:600; min-width:160px; }
-  td.rel { min-width:320px; }
+  tbody tr { transition:background .15s; }
+  tbody tr:nth-child(even) { background:#fbfcfe; }
+  tbody tr:hover { background:#f3f6fb; }
+  tr.fp td:first-child { box-shadow:inset 4px 0 0 var(--fp); }
+  tr.np td:first-child { box-shadow:inset 4px 0 0 var(--np); }
+  tr.ff td:first-child { box-shadow:inset 4px 0 0 var(--ff); }
+  tr.ua td:first-child { box-shadow:inset 4px 0 0 var(--ua); }
+  td.org { font-weight:600; min-width:170px; padding-left:14px; }
+  td.act { min-width:230px; }
+  td.rel { min-width:330px; }
   td a { color:var(--accent); text-decoration:none; }
   td a:hover { text-decoration:underline; }
-  .rel-item { display:block; margin-bottom:3px; }
-  .pending { color:var(--pend); white-space:nowrap; }
-  .ok { color:#2e7d4f; white-space:nowrap; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; white-space:nowrap; }
+  .pill.fp { background:var(--fp-bg); color:#4152a0; } .pill.np { background:var(--np-bg); color:#2f7656; }
+  .pill.ff { background:var(--ff-bg); color:#8f5a1c; } .pill.ua { background:var(--ua-bg); color:#9a3d62; }
+  .sub { display:block; color:var(--muted); font-size:11px; margin-top:3px; }
+  .chip { display:inline-block; padding:2px 8px; margin:0 4px 4px 0; border-radius:6px; font-size:12px; }
+  .chip.p { background:var(--prop); color:var(--prop-ink); } .chip.m { background:var(--meth); color:var(--meth-ink); } .chip.d { background:var(--dom); color:var(--dom-ink); }
+  .ri { display:block; padding:4px 8px; margin-bottom:4px; border-radius:6px; font-size:12.5px; border-left:3px solid transparent; }
+  .ri.dev { background:var(--r-dev); color:var(--r-dev-ink); border-left-color:#e7a38a; }
+  .ri.gov { background:var(--r-gov); color:var(--r-gov-ink); border-left-color:#8fb0de; }
+  .ri.phil { background:var(--r-phil); color:var(--r-phil-ink); border-left-color:#93c99d; }
+  .ri.corp { background:var(--r-corp); color:var(--r-corp-ink); border-left-color:#b3a3e0; }
+  .ri.none { background:var(--r-none); color:var(--r-none-ink); border-left-color:#c9ccd2; }
 </style>
 </head>
 <body>
@@ -43,9 +74,10 @@
   <select id="f-prop" aria-label="Property"><option value="">All properties</option></select>
   <select id="f-method" aria-label="Method"><option value="">All methods</option></select>
   <select id="f-domain" aria-label="Domain"><option value="">All domains</option></select>
+  <select id="f-author" aria-label="Evidence published by"><option value="">Evidence published by: anyone</option></select>
   <select id="f-rel" aria-label="Relationship type"><option value="">All relationship types</option></select>
   <select id="f-dev" aria-label="Developer relationship"><option value="">Developer relationship: any</option><option value="Yes">Developer relationship: yes</option><option value="No">Developer relationship: no</option></select>
-  <select id="f-status" aria-label="Status"><option value="">Any status</option><option>Verified</option><option>Manual check pending</option></select>
+  <select id="f-devname" aria-label="Developer"><option value="">Any developer</option></select>
   <button id="reset" type="button">Reset</button>
   <span class="count" id="count"></span>
 </div>
@@ -57,7 +89,6 @@
       <th data-k="activity_assessed">Activity assessed</th>
       <th data-k="evaluation_evidence">Evaluation evidence</th>
       <th data-k="relationships">Funding and relationships</th>
-      <th data-k="status">Status</th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
@@ -67,38 +98,65 @@
 (function () {
   const D = window.DATA, $ = (id) => document.getElementById(id);
   $("asof").textContent = window.ASOF;
-  const formOf = (r) => (r.institutional_form || "").split(" (")[0];
+  const FORMCLS = { "For-profit": "fp", "Non-profit": "np", "FFRDC": "ff", "UARC": "ua" };
   const uniq = (f) => [...new Set(D.flatMap(f))].filter(Boolean).sort((a, b) => a.localeCompare(b));
-  const fill = (id, vals) => vals.forEach((v) => { const o = document.createElement("option"); o.value = o.textContent = v; $(id).appendChild(o); });
-  fill("f-form", uniq((r) => [formOf(r)]));
+  const fill = (id, vals, label) => vals.forEach((v) => { const o = document.createElement("option"); o.value = v; o.textContent = label ? label(v) : v; $(id).appendChild(o); });
+  fill("f-form", uniq((r) => [r.form]));
   fill("f-prop", uniq((r) => r.properties));
   fill("f-method", uniq((r) => r.methods));
   fill("f-domain", uniq((r) => r.domains));
+  fill("f-author", uniq((r) => [r.evidence_author]), (v) => "Evidence published by: " + v.toLowerCase());
   fill("f-rel", uniq((r) => r.relationship_types));
+  const devCount = {}; D.forEach((r) => r.developers.forEach((d) => (devCount[d] = (devCount[d] || 0) + 1)));
+  fill("f-devname", Object.keys(devCount).sort((a, b) => devCount[b] - devCount[a] || a.localeCompare(b)));
   const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const splitRel = (t) => String(t || "").split(/;\s*(?=[A-Z][A-Za-z\- ]+:|\d[\d,]* funders|No relationship)/);
+  const relCls = (it) => {
+    if (/^No relationship/.test(it)) return "none";
+    if (/^(Funding from developer|Paid engagement by developer|Developer equity stake|Model access|In-kind support from developer|Research collaboration with developer|Equity stake in developer|Own model development)/.test(it)) return "dev";
+    if (/^(Federal funding|Foreign government funding|Government evaluation agreement)/.test(it)) return "gov";
+    if (/^(\d[\d,]* funders|Philanthropic|Fiscal sponsor)/.test(it)) return "phil";
+    return "corp";
+  };
+  const splitVals = (s) => s.split(/;\s*(?![^()]*\))/).map((v) => v.trim().replace(/[;.]$/, "")).filter((v) => v && v !== "scope only");
+  const activity = (t) => {
+    const parts = String(t || "").split(/(Property|Method|Domain):\s*/); let html = "";
+    for (let i = 1; i < parts.length - 1; i += 2) {
+      const c = parts[i][0].toLowerCase();
+      html += splitVals(parts[i + 1]).map((v) => `<span class="chip ${c}">${esc(v)}</span>`).join("");
+    }
+    return html || esc(t);
+  };
+  const formCell = (r) => {
+    const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
+    return `<span class="pill ${FORMCLS[r.form] || ""}">${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
+  };
+  const IDS = ["q", "f-form", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
   let sortK = "organisation", sortDir = 1;
   function render() {
-    const q = $("q").value.trim().toLowerCase();
-    const f = { form: $("f-form").value, prop: $("f-prop").value, method: $("f-method").value, domain: $("f-domain").value,
-                rel: $("f-rel").value, dev: $("f-dev").value, status: $("f-status").value };
+    const v = (id) => $(id).value, q = v("q").trim().toLowerCase();
     const rows = D.filter((r) =>
-      (!f.form || formOf(r) === f.form) && (!f.prop || r.properties.includes(f.prop)) && (!f.method || r.methods.includes(f.method)) &&
-      (!f.domain || r.domains.includes(f.domain)) && (!f.rel || r.relationship_types.includes(f.rel)) &&
-      (!f.dev || r.developer_relationship === f.dev) && (!f.status || r.status === f.status) &&
+      (!v("f-form") || r.form === v("f-form")) && (!v("f-prop") || r.properties.includes(v("f-prop"))) &&
+      (!v("f-method") || r.methods.includes(v("f-method"))) && (!v("f-domain") || r.domains.includes(v("f-domain"))) &&
+      (!v("f-author") || r.evidence_author === v("f-author")) && (!v("f-rel") || r.relationship_types.includes(v("f-rel"))) &&
+      (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
       (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships].join(" ").toLowerCase().includes(q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
-    $("rows").innerHTML = rows.map((r) => `<tr>
+    $("rows").innerHTML = rows.map((r) => `<tr class="${FORMCLS[r.form] || ""}">
       <td class="org">${esc(r.organisation)}</td>
-      <td>${esc(r.institutional_form)}</td>
-      <td>${esc(r.activity_assessed)}</td>
+      <td>${formCell(r)}</td>
+      <td class="act">${activity(r.activity_assessed)}</td>
       <td>${r.evidence_url ? `<a href="${esc(r.evidence_url)}" target="_blank" rel="noopener">${esc(r.evaluation_evidence)}</a>` : esc(r.evaluation_evidence)}</td>
-      <td class="rel">${splitRel(r.relationships).map((x) => `<span class="rel-item">${esc(x)}</span>`).join("")}</td>
-      <td class="${r.status === "Verified" ? "ok" : "pending"}">${esc(r.status)}</td></tr>`).join("");
+      <td class="rel">${splitRel(r.relationships).map((x) => `<span class="ri ${relCls(x)}">${esc(x)}</span>`).join("")}</td></tr>`).join("");
     $("count").textContent = `${rows.length} of ${D.length}`;
+    IDS.slice(1).forEach((id) => $(id).classList.toggle("on", !!$(id).value));
+    document.querySelectorAll("th[data-k]").forEach((th) => {
+      th.querySelector(".arr")?.remove();
+      if (th.dataset.k === sortK) th.insertAdjacentHTML("beforeend", `<span class="arr">${sortDir > 0 ? "▲" : "▼"}</span>`);
+    });
   }
-  ["q", "f-form", "f-prop", "f-method", "f-domain", "f-rel", "f-dev", "f-status"].forEach((id) => $(id).addEventListener("input", render));
-  $("reset").addEventListener("click", () => { document.querySelectorAll(".filters input, .filters select").forEach((el) => (el.value = "")); render(); });
+  IDS.forEach((id) => $(id).addEventListener("input", render));
+  $("reset").addEventListener("click", () => { IDS.forEach((id) => ($(id).value = "")); render(); });
   document.querySelectorAll("th[data-k]").forEach((th) => th.addEventListener("click", () => {
     const k = th.dataset.k; sortDir = sortK === k ? -sortDir : 1; sortK = k; render();
   }));
