@@ -279,13 +279,18 @@
   const IDS = ["q", "f-form", "f-desig", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
   let sortK = "organisation", sortDir = 1, VIEW = D;
   // Download menu: current view (filtered rows, columns shown on the page incl. expanded details) or the full dataset file
-  const VCOLS = [["Organisation", (r) => r.organisation], ["Also known as", (r) => r.known_as], ["Description (organisation's own words)", (r) => r.description],
-    ["Website", (r) => r.website], ["Controlled by", (r) => r.controlled_by], ["Sector", (r) => r.sector], ["Legal form", (r) => r.legal_form], ["Tax status", (r) => r.tax_status],
-    ["Federal designation", (r) => r.designation], ["Operator or fiscal sponsor", (r) => r.operator], ["Activity assessed", (r) => r.activity_assessed],
-    ["Funding and relationships", (r) => r.relationships], ["Developer relationship", (r) => r.developer_relationship], ["Developers named", (r) => r.developers.join("; ")],
-    ["Contact", (r) => r.contact], ["Recent evaluation", (r) => r.evaluation_evidence], ["Publication link", (r) => r.evidence_url],
-    ["Conducted by", (r) => r.roles.conducted_by], ["Issued by", (r) => r.roles.published_by], ["Paid for by", (r) => r.roles.commissioned_by],
-    ["Publication control", (r) => r.roles.publication_control], ["Other evaluation publications", (r) => r.other_evaluations.map((o) => o.title + " <" + o.url + ">").join("; ")]];
+  const J = (xs) => xs.filter(Boolean).join("\n");
+  const VCOLS = [
+    ["Organisation", (r) => J([r.organisation, r.known_as && "Also known as " + r.known_as, r.description && "“" + r.description + "”", r.controlled_by && !r.operator && "Controlled by " + r.controlled_by, r.website])],
+    ["Form", (r) => J([r.designation !== "None" ? r.designation : r.sector, r.designation === "None" && r.legal_form !== "Not shown in the registered name" && r.legal_form,
+      r.designation === "None" && r.sector !== "For-profit" && r.tax_status, r.operator && "Operator: " + r.operator])],
+    ["Activity assessed", (r) => r.activity_assessed],
+    ["Funding and relationships", (r) => J(r.relationship_items.map((x) => x.text + (x.sources.length ? " [source: " + x.sources.map((s) => s.url).join(" ") + "]" : x.scope ? " [sources checked: " + x.scope + "]" : "")))],
+    ["Contact", (r) => r.contact_emails.length ? r.contact_emails.join("; ") : r.contact_form],
+    ["Recent evaluation", (r) => { const ro = r.roles, ok = (v) => v && v !== "Not yet checked";
+      return J([r.evaluation_evidence, r.evidence_url, ok(ro.conducted_by) && "Conducted by: " + ro.conducted_by, ok(ro.published_by) && "Issued by: " + ro.published_by,
+        ok(ro.commissioned_by) && "Paid for by: " + ro.commissioned_by, ok(ro.publication_control) && "Publication control: " + ro.publication_control,
+        r.other_evaluations.length && "Other evaluation publications: " + r.other_evaluations.map((o) => o.title + " <" + o.url + ">").join("; ")]); }]];
   const updDl = () => {
     const n = $("dl-view-n"); if (!n) return;
     n.textContent = `${VIEW.length} row${VIEW.length === 1 ? "" : "s"} × ${VCOLS.length} columns, with the filters and sort now applied`;
