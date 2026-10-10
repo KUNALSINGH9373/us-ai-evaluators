@@ -69,6 +69,18 @@
   .rl li + li { border-top:1px dotted var(--rule); padding-top:5px; margin-top:2px; }
   .rl .dot { margin-top:6px; }
   .rl b { font-weight:600; color:var(--ink); }
+  :root { --rowh:122px; }
+  .clip { height:var(--rowh); overflow:hidden; position:relative; }
+  tr.over:not(.open) .clip.cut::after { content:""; position:absolute; left:0; right:0; bottom:0; height:34px; background:linear-gradient(rgba(255,255,255,0), var(--paper)); pointer-events:none; }
+  tbody tr:hover .clip.cut::after { background:linear-gradient(rgba(251,250,247,0), #fbfaf7) !important; }
+  tr.open .clip { height:auto; }
+  td.tg { width:34px; padding:12px 0 12px 10px; }
+  .tgb { width:24px; height:24px; border:1px solid var(--rule2); border-radius:3px; background:#fff; color:var(--ink2); cursor:pointer; display:none; align-items:center; justify-content:center; padding:0; transition:transform .15s; }
+  .tgb svg { width:12px; height:12px; }
+  tr.over .tgb { display:inline-flex; }
+  tr.open .tgb { transform:rotate(180deg); border-color:var(--navy); color:var(--navy); }
+  tr.over { cursor:pointer; }
+  #expand { font:inherit; font-size:12px; background:none; border:none; color:var(--link); cursor:pointer; padding:0; }
   .empty { padding:40px; text-align:center; color:var(--muted); }
   @media (max-width:640px) { .top-in, main { padding-left:16px; padding-right:16px; } h1 { font-size:22px; } .grid { grid-template-columns:1fr 1fr; } .fld.wide { grid-column:1 / -1; } .dl { margin-left:0; } .count { margin-left:0; } }
 </style>
@@ -103,12 +115,14 @@
         <span><i class="dot" style="background:var(--c-none)"></i>None identified</span>
       </div>
       <span class="count" id="count"></span>
+      <button id="expand" type="button">Expand all rows</button>
       <button id="reset" type="button">Clear filters</button>
     </div>
   </section>
   <div class="wrap">
     <table>
       <thead><tr>
+        <th aria-label="Expand"></th>
         <th data-k="organisation">Organisation</th>
         <th data-k="form">Form</th>
         <th data-k="activity_assessed">Activity assessed</th>
@@ -171,6 +185,21 @@
     const rest = r.institutional_form.slice(r.form.length).trim().replace(/^\(|\)$/g, "");
     return `<span class="form-l"><i style="background:${FORMC[r.form] || "var(--muted)"}"></i>${esc(r.form)}</span>${rest ? `<span class="sub">${esc(rest)}</span>` : ""}`;
   };
+  const openSet = new Set(); let allOpen = false;
+  function markOverflow() {
+    document.querySelectorAll("#rows tr[data-o]").forEach((tr) => {
+      const was = tr.classList.contains("open"); tr.classList.remove("open");
+      let over = false;
+      tr.querySelectorAll(".clip").forEach((c) => { const cut = c.scrollHeight > c.clientHeight + 2; c.classList.toggle("cut", cut); over = over || cut; });
+      tr.classList.toggle("over", over); if (was) tr.classList.add("open");
+    });
+  }
+  $("rows").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr.over"); if (!tr || (e.target.closest("a") && !e.target.closest(".tgb"))) return;
+    if (window.getSelection && String(window.getSelection()).length) return;
+    const o = tr.dataset.o; tr.classList.toggle("open");
+    tr.classList.contains("open") ? openSet.add(o) : openSet.delete(o);
+  });
   const IDS = ["q", "f-form", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
   let sortK = "organisation", sortDir = 1;
   function render() {
@@ -182,14 +211,17 @@
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
       (!q || [r.organisation, r.institutional_form, r.activity_assessed, r.evaluation_evidence, r.relationships, r.contact].join(" ").toLowerCase().includes(q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
-    $("rows").innerHTML = rows.length ? rows.map((r) => `<tr>
-      <td class="org">${r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation)}</td>
-      <td class="form">${formCell(r)}</td>
-      <td class="act">${activity(r.activity_assessed)}</td>
-      <td class="ev">${evidence(r)}</td>
-      <td class="rel"><ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul></td>
-      <td class="ct">${contactCell(r)}</td></tr>`).join("")
-      : `<tr><td colspan="6" class="empty">No organisations match these filters.</td></tr>`;
+    const C = (cls, html) => `<td class="${cls}"><div class="clip">${html}</div></td>`;
+    $("rows").innerHTML = rows.length ? rows.map((r) => `<tr data-o="${esc(r.organisation)}" class="${openSet.has(r.organisation) || allOpen ? "open" : ""}">
+      <td class="tg"><button class="tgb" type="button" aria-label="Expand row"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button></td>
+      ${C("org", r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation))}
+      ${C("form", formCell(r))}
+      ${C("act", activity(r.activity_assessed))}
+      ${C("ev", evidence(r))}
+      ${C("rel", `<ul class="rl">${splitRel(r.relationships).map(relItem).join("")}</ul>`)}
+      ${C("ct", contactCell(r))}</tr>`).join("")
+      : `<tr><td colspan="7" class="empty">No organisations match these filters.</td></tr>`;
+    markOverflow();
     $("count").innerHTML = `Showing <b>${rows.length}</b> of ${D.length}`;
     IDS.slice(1).forEach((id) => $(id).classList.toggle("on", !!$(id).value));
     document.querySelectorAll("th[data-k]").forEach((th) => {
@@ -198,6 +230,12 @@
     });
   }
   IDS.forEach((id) => $(id).addEventListener("input", render));
+  $("expand").addEventListener("click", () => {
+    allOpen = !allOpen; openSet.clear(); $("expand").textContent = allOpen ? "Collapse all rows" : "Expand all rows";
+    document.querySelectorAll("#rows tr[data-o]").forEach((tr) => tr.classList.toggle("open", allOpen));
+  });
+  window.addEventListener("resize", () => { clearTimeout(window.__rt); window.__rt = setTimeout(markOverflow, 150); });
+  document.fonts && document.fonts.ready.then(markOverflow);
   $("reset").addEventListener("click", () => { IDS.forEach((id) => ($(id).value = "")); render(); });
   document.querySelectorAll("th[data-k]").forEach((th) => th.addEventListener("click", () => {
     const k = th.dataset.k; sortDir = sortK === k ? -sortDir : 1; sortK = k; render();
