@@ -217,7 +217,7 @@
   };
   const orgCell = (r) => (r.website ? `<a href="${esc(r.website)}" target="_blank" rel="noopener">${esc(r.organisation)}</a>` : esc(r.organisation)) +
     (r.known_as ? `<span class="aka">Also known as ${esc(r.known_as)}</span>` : "") +
-    (r.description ? `<span class="desc">“${esc(r.description)}”<a href="${esc(r.description_url)}" target="_blank" rel="noopener" title="From the organisation's website">↗</a></span>` : "") +
+    (r.description ? `<span class="desc">“${esc(r.description)}”</span>` : "") +
     (r.controlled_by && !r.operator ? `<span class="ctl">Controlled by ${esc(r.controlled_by)}</span>` : "");
   const norm = (s) => String(s || "").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
   const hay = (r) => " " + norm([r.organisation, r.known_as, r.aliases, r.description, r.controlled_by, r.sector, r.legal_form, r.tax_status, r.designation, r.operator, r.activity_assessed,
