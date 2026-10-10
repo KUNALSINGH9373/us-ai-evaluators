@@ -45,4 +45,7 @@ with open("us_ai_evaluators.csv", "w", newline="", encoding="utf-8") as f:
                     " | ".join(f"{i['text']} <{' '.join(s['url'] for s in i['sources']) or i.get('data_file') or 'sources checked: ' + i.get('scope', '')}>" for i in r["relationship_items"]),
                     "; ".join(r["properties"]), "; ".join(r["methods"]), "; ".join(r["domains"]), "; ".join(r["relationship_types"]),
                     r["developer_relationship"], "; ".join(r["developers"]), r["contact"]])
+import csv as _c
+with open("us_ai_evaluators.csv", encoding="utf-8") as f: _r = list(_c.reader(f))
+with open("data.js", "a") as f: f.write(f"window.FULLCSV={{rows:{len(_r) - 1},cols:{len(_r[0])}}};")
 print(len(rows), "rows")

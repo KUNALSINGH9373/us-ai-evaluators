@@ -99,6 +99,32 @@
   .note-l { color:var(--muted); font-size:11px; margin-top:4px; max-width:900px; }
   .dls { margin-left:auto; display:flex; flex-wrap:wrap; gap:8px; }
   .dls .dl { margin-left:0; }
+  .dlwrap { position:relative; }
+  button.dl { background:none; cursor:pointer; font-family:inherit; }
+  .dlmenu { position:absolute; right:0; top:calc(100% + 6px); z-index:30; background:var(--paper); border:1px solid var(--rule2); border-radius:4px; box-shadow:0 6px 20px rgba(0,0,0,.12); min-width:260px; padding:4px 0; }
+  .dlmenu button, .dlmenu a { display:block; width:100%; text-align:left; background:none; border:none; padding:9px 14px; font:inherit; font-size:12px; color:var(--ink); text-decoration:none; cursor:pointer; }
+  .dlmenu button:hover, .dlmenu a:hover { background:#f3f5f9; }
+  .dlmenu b { display:block; font-weight:600; color:var(--navy); }
+  .dlmenu span { display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+  #chat-btn { position:fixed; right:20px; bottom:20px; z-index:20; display:none; font:600 12.5px var(--sans); background:var(--navy); color:#fff; border:none; border-radius:20px; padding:11px 18px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+  #chat { position:fixed; right:20px; bottom:20px; z-index:21; width:min(560px, calc(100vw - 32px)); height:min(640px, calc(100vh - 40px)); background:var(--paper); border:1px solid var(--rule2); border-radius:6px; box-shadow:0 10px 40px rgba(0,0,0,.2); display:none; flex-direction:column; }
+  #chat.on { display:flex; }
+  .ch-h { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--rule); }
+  .ch-h b { font:600 15px var(--serif); color:var(--navy); }
+  .ch-h span { color:var(--muted); font-size:11px; flex:1; }
+  .ch-h button { background:none; border:none; color:var(--link); cursor:pointer; font:inherit; font-size:11.5px; }
+  #ch-log { flex:1; overflow:auto; padding:12px 14px; font-size:12.5px; }
+  .ch-m { margin:0 0 12px; }
+  .ch-m.u { background:#f3f5f9; border-radius:4px; padding:8px 10px; }
+  .ch-m.a table { border-collapse:collapse; width:100%; min-width:0; margin:6px 0; font-size:11.5px; }
+  .ch-m.a th, .ch-m.a td { border:1px solid var(--rule); padding:4px 6px; vertical-align:top; position:static; text-transform:none; letter-spacing:0; color:var(--ink); cursor:auto; white-space:normal; }
+  .ch-m.a th { background:#f7f6f2; }
+  .ch-m.a p { margin:4px 0; }
+  .ch-m.a a { color:var(--link); }
+  .ch-f { display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--rule); }
+  .ch-f textarea { flex:1; resize:none; height:44px; font:inherit; font-size:12.5px; padding:6px 8px; border:1px solid var(--rule2); border-radius:3px; }
+  .ch-f button { font:600 12px var(--sans); background:var(--navy); color:#fff; border:none; border-radius:3px; padding:0 14px; cursor:pointer; }
+  .ch-note { color:var(--muted); font-size:10.5px; padding:0 14px 8px; }
   .empty { padding:40px; text-align:center; color:var(--muted); }
   @media (max-width:640px) { .top-in, main { padding-left:16px; padding-right:16px; } h1 { font-size:21px; } .grid { grid-template-columns:1fr 1fr; } .fld.wide { grid-column:1 / -1; } .dl { margin-left:0; } .count { margin-left:0; } }
 </style>
@@ -110,7 +136,11 @@
     <div class="meta">Dataset as of <b id="asof"></b> · <b id="total"></b> evaluators (rows), <b id="indep"></b> independently controlled organisations</div>
     <div class="note-l">Each row shows one recent evaluation as an example, not the organisation's full body of work. Relationships are those found in the sources checked; an absence is not proof that none exists.</div>
   </div>
-  <div class="dls"><a class="dl" href="us_ai_evaluators.csv" download>Download CSV</a></div>
+  <div class="dls dlwrap"><button class="dl" id="dl-btn" type="button" aria-haspopup="true" aria-expanded="false">Download CSV ▾</button>
+    <div class="dlmenu" id="dl-menu" hidden>
+      <button type="button" id="dl-view"><b>Current view</b><span id="dl-view-n"></span></button>
+      <a href="us_ai_evaluators.csv" download id="dl-full"><b>Full dataset</b><span id="dl-full-n"></span></a>
+    </div></div>
 </div></div>
 <main>
   <section class="panel">
@@ -154,6 +184,13 @@
     </table>
   </div>
 </main>
+<button id="chat-btn" type="button">Ask the map</button>
+<div id="chat" role="dialog" aria-label="Ask the map">
+  <div class="ch-h"><b>Ask the map</b><span>Describe the evaluation you need; answers use the full table.</span><button id="ch-new" type="button">New chat</button><button id="ch-x" type="button" aria-label="Close">Close</button></div>
+  <div id="ch-log"></div>
+  <div class="ch-f"><textarea id="ch-in" placeholder="e.g. I want to red-team an open-weight model for cyber offence; who has done this, and who has ties to the developer?"></textarea><button id="ch-send" type="button">Send</button></div>
+  <div class="ch-note">AI-generated from the public table. Ranked by fit to your request, not an endorsement or quality ranking. Check the sources.</div>
+</div>
 <script src="data.js"></script>
 <script>
 (function () {
@@ -240,7 +277,31 @@
     tr.classList.contains("open") ? openSet.add(o) : openSet.delete(o);
   });
   const IDS = ["q", "f-form", "f-desig", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
-  let sortK = "organisation", sortDir = 1;
+  let sortK = "organisation", sortDir = 1, VIEW = D;
+  // Download menu: current view (filtered rows, columns shown on the page incl. expanded details) or the full dataset file
+  const VCOLS = [["Organisation", (r) => r.organisation], ["Also known as", (r) => r.known_as], ["Description (organisation's own words)", (r) => r.description],
+    ["Website", (r) => r.website], ["Controlled by", (r) => r.controlled_by], ["Sector", (r) => r.sector], ["Legal form", (r) => r.legal_form], ["Tax status", (r) => r.tax_status],
+    ["Federal designation", (r) => r.designation], ["Operator or fiscal sponsor", (r) => r.operator], ["Activity assessed", (r) => r.activity_assessed],
+    ["Funding and relationships", (r) => r.relationships], ["Developer relationship", (r) => r.developer_relationship], ["Developers named", (r) => r.developers.join("; ")],
+    ["Contact", (r) => r.contact], ["Recent evaluation", (r) => r.evaluation_evidence], ["Publication link", (r) => r.evidence_url],
+    ["Conducted by", (r) => r.roles.conducted_by], ["Issued by", (r) => r.roles.published_by], ["Paid for by", (r) => r.roles.commissioned_by],
+    ["Publication control", (r) => r.roles.publication_control], ["Other evaluation publications", (r) => r.other_evaluations.map((o) => o.title + " <" + o.url + ">").join("; ")]];
+  const updDl = () => {
+    const n = $("dl-view-n"); if (!n) return;
+    n.textContent = `${VIEW.length} row${VIEW.length === 1 ? "" : "s"} × ${VCOLS.length} columns, with the filters and sort now applied`;
+    const f = window.FULLCSV; $("dl-full-n").textContent = f ? `All ${f.rows} rows × ${f.cols} columns, every field and source` : "Every row, field and source";
+  };
+  const csvCell = (v) => { v = String(v == null ? "" : v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  $("dl-btn").addEventListener("click", (e) => { e.stopPropagation(); const m = $("dl-menu"); m.hidden = !m.hidden; $("dl-btn").setAttribute("aria-expanded", String(!m.hidden)); });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".dlwrap")) $("dl-menu").hidden = true; });
+  $("dl-full").addEventListener("click", () => { $("dl-menu").hidden = true; });
+  $("dl-view").addEventListener("click", () => {
+    const lines = [VCOLS.map((c) => csvCell(c[0])).join(",")].concat(VIEW.map((r) => VCOLS.map((c) => csvCell(c[1](r))).join(",")));
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `us_ai_evaluators_current_view_${VIEW.length}_rows.csv`; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000); $("dl-menu").hidden = true;
+  });
   function render() {
     const v = (id) => $(id).value, q = v("q").trim().toLowerCase();
     const rows = D.filter((r) =>
@@ -250,6 +311,7 @@
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
       (!q || matchQ(r, q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
+    VIEW = rows; updDl();
     const C = (cls, html) => `<td class="${cls}"><div class="clip">${html}</div></td>`;
     $("rows").innerHTML = rows.length ? rows.map((r) => `<tr data-o="${esc(r.organisation)}" class="${openSet.has(r.organisation) || allOpen ? "open" : ""}">
       <td class="tg"><button class="tgb" type="button" aria-label="Expand row"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button></td>
@@ -280,6 +342,55 @@
     const k = th.dataset.k; sortDir = sortK === k ? -sortDir : 1; sortK = k; render();
   }));
   render();
+})();
+
+(function () {
+  const CHAT_URL = ""; // set to the deployed Cloudflare Worker URL (chat-worker/DEPLOY.md)
+  if (!CHAT_URL) return;
+  const $ = (id) => document.getElementById(id), btn = $("chat-btn"), box = $("chat"), log = $("ch-log"), inp = $("ch-in");
+  btn.style.display = "block";
+  let hist = []; try { hist = JSON.parse(sessionStorage.getItem("chat") || "[]"); } catch (e) {}
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const inline = (t) => esc(t).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  function md(t) {
+    const L = t.split("\n"); let out = "", i = 0;
+    while (i < L.length) {
+      if (/^\s*\|/.test(L[i]) && i + 1 < L.length && /^\s*\|?\s*:?-{2,}/.test(L[i + 1])) {
+        const cells = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+        out += "<table><tr>" + cells(L[i]).map((c) => "<th>" + inline(c) + "</th>").join("") + "</tr>"; i += 2;
+        while (i < L.length && /^\s*\|/.test(L[i])) { out += "<tr>" + cells(L[i]).map((c) => "<td>" + inline(c) + "</td>").join("") + "</tr>"; i++; }
+        out += "</table>";
+      } else { if (L[i].trim()) out += "<p>" + inline(L[i].replace(/^#+\s*/, "").replace(/^[-*]\s+/, "• ")) + "</p>"; i++; }
+    }
+    return out;
+  }
+  const draw = () => { log.innerHTML = hist.map((m) => `<div class="ch-m ${m.role === "user" ? "u" : "a"}">${m.role === "user" ? esc(m.content) : md(m.content)}</div>`).join(""); log.scrollTop = log.scrollHeight; };
+  const save = () => { try { sessionStorage.setItem("chat", JSON.stringify(hist)); } catch (e) {} };
+  async function send() {
+    const q = inp.value.trim(); if (!q) return;
+    inp.value = ""; hist.push({ role: "user", content: q }); hist.push({ role: "assistant", content: "…" }); draw();
+    const cur = hist[hist.length - 1]; cur.content = "";
+    try {
+      const r = await fetch(CHAT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: hist.slice(0, -1) }) });
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || "Request failed (" + r.status + ")"); }
+      const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "";
+      for (;;) {
+        const { done, value } = await rd.read(); if (done) break;
+        buf += dec.decode(value, { stream: true }); const parts = buf.split("\n"); buf = parts.pop();
+        for (const line of parts) {
+          if (!line.startsWith("data:")) continue;
+          try { const ev = JSON.parse(line.slice(5)); if (ev.type === "content_block_delta" && ev.delta && ev.delta.text) { cur.content += ev.delta.text; draw(); } } catch (e) {}
+        }
+      }
+      if (!cur.content) cur.content = "No answer was returned. Please try again.";
+    } catch (e) { cur.content = "Sorry: " + e.message; }
+    draw(); save();
+  }
+  btn.onclick = () => { box.classList.add("on"); btn.style.display = "none"; draw(); inp.focus(); };
+  $("ch-x").onclick = () => { box.classList.remove("on"); btn.style.display = "block"; };
+  $("ch-new").onclick = () => { hist = []; save(); draw(); };
+  $("ch-send").onclick = send;
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
 })();
 </script>
 </body>
