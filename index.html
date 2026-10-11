@@ -32,6 +32,24 @@
   .fld input, .fld select { font:inherit; font-size:12px; height:34px; padding:0 10px; border:1px solid var(--rule2); border-radius:3px; background:#fff; color:var(--ink); width:100%; }
   .fld input:focus, .fld select:focus { outline:none; border-color:var(--navy); box-shadow:0 0 0 2px rgba(31,51,80,.12); }
   .fld select.on { border-color:var(--navy); background:#f3f5f9; }
+  /* Custom dropdowns: the native <select> stays as the state holder; the list is drawn in the site's own type and colours */
+  .dd { position:relative; }
+  .dd select { position:absolute; inset:0; opacity:0; pointer-events:none; }
+  .dd-b { display:flex; align-items:center; gap:8px; width:100%; height:34px; padding:0 10px; border:1px solid var(--rule2); border-radius:3px; background:#fff; color:var(--ink); font:inherit; font-size:12px; text-align:left; cursor:pointer; }
+  .dd-b span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dd-b svg { width:10px; height:10px; flex:none; color:var(--muted); transition:transform .15s; }
+  .dd-b:focus-visible, .dd.open .dd-b { outline:none; border-color:var(--navy); box-shadow:0 0 0 2px rgba(31,51,80,.12); }
+  .dd.open .dd-b svg { transform:rotate(180deg); }
+  .dd.on .dd-b { border-color:var(--navy); background:#f3f5f9; font-weight:500; }
+  .dd-l { position:absolute; z-index:20; top:calc(100% + 4px); left:0; min-width:100%; width:max-content; max-width:min(420px, 92vw); max-height:320px; overflow:auto; margin:0; padding:4px 0; list-style:none;
+          background:var(--paper); border:1px solid var(--rule2); border-radius:4px; box-shadow:0 8px 24px rgba(28,36,48,.12); font-size:12px; color:var(--ink); }
+  .dd-l[hidden] { display:none; }
+  .dd-l li { padding:7px 14px; cursor:pointer; line-height:1.35; }
+  .dd-l li.g { padding:9px 14px 4px; font-size:9.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--navy); cursor:default; }
+  .dd-l li.g:not(:first-child) { border-top:1px solid var(--rule); margin-top:4px; }
+  .dd-l li.o.in { padding-left:22px; }
+  .dd-l li.o:hover, .dd-l li.o.act { background:#f3f5f9; }
+  .dd-l li.o.sel { color:var(--navy); font-weight:600; }
   .bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; margin-top:14px; padding-top:12px; border-top:1px solid var(--rule); font-size:11px; color:var(--ink2); }
   .key { display:flex; flex-wrap:wrap; gap:6px 18px; }
   .key span { display:inline-flex; align-items:center; gap:6px; }
@@ -341,11 +359,53 @@
     markOverflow();
     $("count").innerHTML = `Showing <b>${rows.length}</b> of ${D.length}`;
     IDS.slice(1).forEach((id) => $(id).classList.toggle("on", !!$(id).value));
+    DDS.forEach((d) => d.sync());
     document.querySelectorAll("th[data-k]").forEach((th) => {
       th.querySelector(".arr")?.remove();
       if (th.dataset.k === sortK) th.insertAdjacentHTML("beforeend", `<span class="arr">${sortDir > 0 ? "▲" : "▼"}</span>`);
     });
   }
+  // Custom dropdowns (same type and colours as the page; native option lists ignore the site styles)
+  const ARROW = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>';
+  const DDS = [];
+  document.querySelectorAll(".fld select").forEach((sel) => {
+    const wrap = document.createElement("div"); wrap.className = "dd"; sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
+    sel.tabIndex = -1; sel.setAttribute("aria-hidden", "true");
+    const b = document.createElement("button"); b.type = "button"; b.className = "dd-b"; b.setAttribute("aria-haspopup", "listbox"); b.setAttribute("aria-expanded", "false");
+    b.innerHTML = "<span></span>" + ARROW; wrap.appendChild(b);
+    const lab = document.querySelector(`label[for="${sel.id}"]`); if (lab) { b.id = sel.id + "-b"; lab.htmlFor = b.id; }
+    const ul = document.createElement("ul"); ul.className = "dd-l"; ul.setAttribute("role", "listbox"); ul.hidden = true; wrap.appendChild(ul);
+    [...sel.children].forEach((n) => {
+      const add = (o, inGroup) => { const li = document.createElement("li"); li.className = "o" + (inGroup ? " in" : ""); li.setAttribute("role", "option"); li.dataset.v = o.value; li.textContent = o.textContent; ul.appendChild(li); };
+      if (n.tagName === "OPTGROUP") { const g = document.createElement("li"); g.className = "g"; g.textContent = n.label; ul.appendChild(g); [...n.children].forEach((o) => add(o, true)); }
+      else add(n, false);
+    });
+    const opts = () => [...ul.querySelectorAll("li.o")];
+    const close = () => { ul.hidden = true; wrap.classList.remove("open"); b.setAttribute("aria-expanded", "false"); };
+    const open = () => {
+      DDS.forEach((d) => d.close()); ul.style.left = ""; ul.style.right = ""; ul.hidden = false; wrap.classList.add("open"); b.setAttribute("aria-expanded", "true");
+      if (ul.getBoundingClientRect().right > document.documentElement.clientWidth - 8) { ul.style.left = "auto"; ul.style.right = "0"; }  // open leftwards at the right edge
+      const cur = opts().find((li) => li.dataset.v === sel.value); opts().forEach((li) => li.classList.toggle("act", li === cur)); cur && cur.scrollIntoView({ block: "nearest" });
+    };
+    const pick = (v) => { sel.value = v; close(); b.focus(); sel.dispatchEvent(new Event("input", { bubbles: true })); };
+    b.addEventListener("click", (e) => { e.stopPropagation(); ul.hidden ? open() : close(); });
+    ul.addEventListener("click", (e) => { const li = e.target.closest("li.o"); if (li) pick(li.dataset.v); });
+    b.addEventListener("keydown", (e) => {
+      const os = opts(); let i = os.findIndex((li) => li.classList.contains("act"));
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault(); if (ul.hidden) return open();
+        i = Math.max(0, Math.min(os.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)));
+        os.forEach((li, k) => li.classList.toggle("act", k === i)); os[i].scrollIntoView({ block: "nearest" });
+      } else if ((e.key === "Enter" || e.key === " ") && !ul.hidden && i >= 0) { e.preventDefault(); pick(os[i].dataset.v); }
+      else if (e.key === "Escape") close();
+    });
+    const sync = () => {
+      const o = sel.selectedOptions[0]; b.querySelector("span").textContent = o ? o.textContent : "All";
+      wrap.classList.toggle("on", !!sel.value); opts().forEach((li) => { li.classList.toggle("sel", li.dataset.v === sel.value); li.setAttribute("aria-selected", String(li.dataset.v === sel.value)); });
+    };
+    DDS.push({ close, sync });
+  });
+  document.addEventListener("click", (e) => { if (!e.target.closest(".dd")) DDS.forEach((d) => d.close()); });
   IDS.forEach((id) => $(id).addEventListener("input", render));
   $("expand").addEventListener("click", () => {
     allOpen = !allOpen; openSet.clear(); $("expand").textContent = allOpen ? "Collapse all rows" : "Expand all rows";
