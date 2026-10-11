@@ -14,6 +14,33 @@ def developers(rel):
             n = m.group(2).strip().rstrip(",")
             if "not named" not in n: names.add(NORM.get(n, n))
     return sorted(names)
+FUNDTYPES = {"Funding from developer": "AI developers", "Federal funding": "US government", "Philanthropic funding": "Philanthropic",
+             "Industry fund": "Industry funds", "Corporate funding": "Corporate", "Foreign government funding": "Foreign governments"}
+FNORM = {**NORM, "DARPA": "Defense Advanced Research Projects Agency", "Army": "Department of the Army", "NIST": "Department of Commerce, National Institute of Standards and Technology",
+         "Office of the Secretary of Defense via Washington Headquarters Services": "Department of Defense, Washington Headquarters Services",
+         "AI Safety Fund": "AI Safety Fund (Frontier Model Forum)", "AI Safety Fund, administered by Frontier Model Forum": "AI Safety Fund (Frontier Model Forum)",
+         "AI Safety Fund, administered by the Frontier Model Forum": "AI Safety Fund (Frontier Model Forum)", "Longview": "Longview Philanthropy",
+         "Packard Foundation": "David and Lucile Packard Foundation", "The David & Lucile Packard Foundation": "David and Lucile Packard Foundation",
+         "MacArthur Foundation": "John D. and Catherine T. MacArthur Foundation", "UK AI Security Institute": "UK AI Security Institute"}
+SKIP = re.compile(r"^(all awards|other awards|\d[\d,]* awards|unnamed\b)", re.I)
+def funders(items):
+    """Named funders per row, from the funding items only (not model access, collaborations or fiscal sponsors). 'X via Y' counts both;
+    'Department, unit' also counts the department so the parent catches its units."""
+    out = set()
+    for i in items:
+        g = FUNDTYPES.get(i["type"])
+        m = re.match(r"[^:]+:\s*([^(;]+)", i["text"]) if g else None
+        if not m: continue
+        n = m.group(1).strip().rstrip(",")
+        if SKIP.match(n) or "not named" in n: continue
+        names = []
+        for part in n.split(" via "):
+            names += part.split(" and ") if part.startswith("Jaan Tallinn and") else [part]
+        for x in names:
+            x = FNORM.get(x.strip(), x.strip())
+            out.add(g + "|" + x)
+            if g == "US government" and ", " in x: out.add(g + "|" + x.split(", ")[0])
+    return sorted(out)
 def form(f):
     return f.split(" (")[0]
 rows = []
@@ -22,7 +49,7 @@ for t in sorted(T, key=lambda x: x["organisation"].lower()):
                  "activity_assessed": t["activity_assessed"], "evaluation_evidence": t["evaluation_evidence"], "evidence_url": t["evidence_url"],
                                   "relationships": t["relationships"], "properties": t["properties"], "methods": t["methods"], "domains": t["domains"],
                  "relationship_types": t["relationship_types"], "developer_relationship": t["developer_relationship"],
-                 "developers": developers(t["relationships"]), "contact": t["contact"], "contact_emails": t["contact_emails"], "contact_form": t["contact_form"],
+                 "developers": developers(t["relationships"]), "funders": funders(t["relationship_items"]), "contact": t["contact"], "contact_emails": t["contact_emails"], "contact_form": t["contact_form"],
                  "known_as": t["known_as"], "description": t["description"], "description_url": t["description_url"], "aliases": t["aliases"], "controlled_by": t["controlled_by"], "controller_row": t["controller_row"],
                  "sector": t["sector"], "legal_form": t["legal_form"], "tax_status": t["tax_status"], "designation": t["designation"], "operator": t["operator"],
                  "relationship_items": t["relationship_items"], "other_evaluations": t["other_evaluations"], "roles": t["roles"],

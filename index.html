@@ -155,6 +155,7 @@
       <div class="fld"><label for="f-rel">Relationship type</label><select id="f-rel"><option value="">All</option></select></div>
       <div class="fld"><label for="f-dev">Developer relationship</label><select id="f-dev"><option value="">All</option><option>Yes</option><option>None found in sources checked</option></select></div>
       <div class="fld"><label for="f-devname">Developer</label><select id="f-devname"><option value="">All</option></select></div>
+      <div class="fld"><label for="f-funder">Funder</label><select id="f-funder"><option value="">All</option></select></div>
     </div>
     <div class="bar">
       <div class="key">
@@ -208,6 +209,15 @@
   fill("f-rel", uniq((r) => r.relationship_types));
   const devCount = {}; D.forEach((r) => r.developers.forEach((d) => (devCount[d] = (devCount[d] || 0) + 1)));
   fill("f-devname", Object.keys(devCount).sort((a, b) => devCount[b] - devCount[a] || a.localeCompare(b)));
+  // Funder: named funders from the funding items, grouped by kind, most-funded first; the count is organisations in the table
+  const fCount = {}; D.forEach((r) => r.funders.forEach((f) => (fCount[f] = (fCount[f] || 0) + 1)));
+  ["AI developers", "US government", "Philanthropic", "Industry funds", "Corporate", "Foreign governments"].forEach((g) => {
+    const og = document.createElement("optgroup"); og.label = g;
+    Object.keys(fCount).filter((k) => k.startsWith(g + "|")).sort((a, b) => fCount[b] - fCount[a] || a.localeCompare(b)).forEach((k) => {
+      const o = document.createElement("option"); o.value = k; o.textContent = `${k.slice(g.length + 1)} (${fCount[k]})`; og.appendChild(o);
+    });
+    if (og.children.length) $("f-funder").appendChild(og);
+  });
   const esc = (s) => String(s || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const splitRel = (t) => String(t || "").split(/;\s*(?=[A-Z][A-Za-z\- ]+:|\d[\d,]* funders|No relationship)/);
   const relC = (it) => {
@@ -276,7 +286,7 @@
     const o = tr.dataset.o; tr.classList.toggle("open");
     tr.classList.contains("open") ? openSet.add(o) : openSet.delete(o);
   });
-  const IDS = ["q", "f-form", "f-desig", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname"];
+  const IDS = ["q", "f-form", "f-desig", "f-prop", "f-method", "f-domain", "f-author", "f-rel", "f-dev", "f-devname", "f-funder"];
   let sortK = "organisation", sortDir = 1, VIEW = D;
   // Download menu: current view (filtered rows, columns shown on the page incl. expanded details) or the full dataset file
   const J = (xs) => xs.filter(Boolean).join("\n");
@@ -314,6 +324,7 @@
       (!v("f-method") || r.methods.includes(v("f-method"))) && (!v("f-domain") || r.domains.includes(v("f-domain"))) &&
       (!v("f-author") || r.publisher_type === v("f-author")) && (!v("f-rel") || r.relationship_types.includes(v("f-rel"))) &&
       (!v("f-dev") || r.developer_relationship === v("f-dev")) && (!v("f-devname") || r.developers.includes(v("f-devname"))) &&
+      (!v("f-funder") || r.funders.includes(v("f-funder"))) &&
       (!q || matchQ(r, q))
     ).sort((a, b) => sortDir * String(a[sortK] || "").localeCompare(String(b[sortK] || "")));
     VIEW = rows; updDl();
